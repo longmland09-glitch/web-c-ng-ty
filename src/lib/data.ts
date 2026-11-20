@@ -1,0 +1,200 @@
+/**
+ * Company data taken from xinmiao.com.tw (read 2026-11-20).
+ * Images are loaded from the company's own website. To host them here instead,
+ * download each file into /public/images and change `IMG` to "/images".
+ */
+export const IMG = "https://xinmiao.com.tw";
+
+export const company = {
+  nameZh: "芯淼國際股份有限公司",
+  nameEn: "Xinmiao International Co., Ltd.",
+  short: "XINMIAO",
+  founded: 2020,
+  phone: "+886-7-781-5377",
+  phoneLocal: "07-7815377",
+  fax: "+886-7-781-8071",
+  email: "xm@xmit.com.tw",
+  addressZh: "831 高雄市大寮區江山路95之6號",
+  addressEn: "No. 95-6, Jiangshan Rd., Daliao Dist., Kaohsiung City 831, Taiwan",
+  mapQuery: "高雄市大寮區江山路95之6號",
+  logo: `${IMG}/mainPic/1760442915234.png`,
+  /**
+   * ISO and other certificates. The current website publishes none, so this
+   * list is empty and the certificate block is hidden. Add entries such as
+   * { name: "ISO 9001:2015", issuer: "SGS", id: "TW23/00000" } when available.
+   */
+  certifications: [] as { name: string; issuer: string; id?: string }[],
+};
+
+export const banners = {
+  home: `${IMG}/mainPic/1764050290breathing_soft_glow_v4%20%281500x560%29%20%281%29.gif`,
+  about: `${IMG}/mainPic/1762250166e-18001.png`,
+  products: `${IMG}/mainPic/176405151511161.jpg`,
+  equipment: `${IMG}/mainPic/17620703611759767323123%20%281%29.jpg`,
+  news: `${IMG}/mainPic/1764052537ChatGPT%20Image%202025%E5%B9%B411%E6%9C%8825%E6%97%A5%20%E4%B8%8B%E5%8D%8802_34_05.jpg`,
+  contact: `${IMG}/mainPic/176405143811162.jpg`,
+};
+
+export type Industry = "semi" | "mould" | "auto";
+/** caption keys refer to dictionary `captions` */
+export type Photo = { src: string; caption?: string };
+
+export type ProductData = {
+  id: string;
+  industry: Industry;
+  photos: Photo[];
+  /** Achieved tolerance / surface finish, shown only when filled in. */
+  tolerance?: string;
+  finish?: string;
+};
+
+const p = (path: string, caption?: string): Photo => ({ src: `${IMG}${path}`, caption });
+
+export const products: ProductData[] = [
+  {
+    id: "carriers",
+    industry: "semi",
+    photos: [
+      p("/submainPic/17617916956%E5%87%B8%E5%8F%B0%E5%9E%8B%E8%BC%89%E5%85%B7.jpg", "bossCarrier"),
+      p("/submainPic/17617242687%E8%93%8B%E6%9D%BF.jpg", "coverPlate"),
+      p("/ckimg/ck1762173787.png"),
+      p("/submainPic/17617401558%E6%9C%AA%E5%91%BD%E5%90%8D.png"),
+      p("/submainPic/17617226939S__126459921.jpg"),
+      p("/submainPic/176172420310S__126238726.jpg"),
+    ],
+  },
+  {
+    id: "vacuum",
+    industry: "semi",
+    photos: [
+      p("/submainPic/17617402856LINE_ALBUM_%E7%94%A2%E5%93%81%E4%BB%8B%E7%B4%B9_250915_3%20-%20%E8%A4%87%E8%A3%BD.jpg"),
+      p("/ckimg/ck1762173818.png"),
+      p("/submainPic/17617404927DSCF8669.JPG"),
+      p("/submainPic/17617406128S__86745161%20-%20%E8%A4%87%E8%A3%BD.jpg"),
+      p("/submainPic/17617414999LINE_ALBUM_%E7%94%A2%E5%93%81%E4%BB%8B%E7%B4%B9_250919_1.jpg"),
+      p("/submainPic/176174149910LINE_ALBUM_%E7%94%A2%E5%93%81%E4%BB%8B%E7%B4%B9_250915_2.jpg"),
+    ],
+  },
+  {
+    id: "magazine",
+    industry: "semi",
+    photos: [p("/submainPic/17618849966S__37814277.jpg"), p("/ckimg/ck1762250710.jpg")],
+  },
+  {
+    id: "wirecut",
+    industry: "mould",
+    photos: [
+      p("/submainPic/17620851206IMG_1916.jpeg"),
+      p("/ckimg/ck1762084530.jpeg", "copperElectrode"),
+      p("/ckimg/ck1762403162.jpg", "fineRib"),
+      p("/ckimg/ck1762084756.jpeg", "precisionMould"),
+      p("/ckimg/ck1762084868.jpeg", "largeMould"),
+      p("/ckimg/ck1762403474.jpg"),
+    ],
+  },
+  { id: "stamping", industry: "mould", photos: [] },
+  {
+    id: "equipment",
+    industry: "auto",
+    photos: [
+      p("/submainPic/176302186761762830969727.jpg"),
+      p("/ckimg/ck1763023844.jpg"),
+      p("/ckimg/ck1763022035.jpg"),
+      p("/ckimg/ck1763022921.jpg"),
+      p("/ckimg/ck1763022978.jpg"),
+    ],
+  },
+  {
+    id: "robot",
+    industry: "auto",
+    photos: [
+      p("/ckimg/ck1763255235.jpg"),
+      p("/submainPic/1763079903%E6%B8%85%E6%B4%97%E5%B7%A5%E4%BB%B6%E5%A4%96%E8%A7%80%E5%8F%83%E8%80%83.jpg", "afterCleaning"),
+      p("/ckimg/ck1763080104.jpg"),
+      p("/ckimg/ck1763080163.jpg"),
+    ],
+  },
+  {
+    id: "trolley",
+    industry: "auto",
+    photos: [
+      p("/submainPic/17630214456PPC.jpg"),
+      p("/ckimg/ck1763021668.jpg", "allPP"),
+      p("/ckimg/ck1763021745.jpg", "metalFrame"),
+      p("/ckimg/ck1763023196.jpg"),
+    ],
+  },
+];
+
+export type MachineModel = { brand: string; model: string; travel?: string; note?: string; sheet?: string };
+export type MachineData = { id: string; units?: number; models: MachineModel[]; photos: Photo[] };
+
+export const machines: MachineData[] = [
+  {
+    id: "wire",
+    units: 34,
+    models: [
+      { brand: "Mitsubishi", model: "MV1200S", travel: "400 × 300 × 220", sheet: `${IMG}/ckimg/ck1762074836.jpeg` },
+      { brand: "Mitsubishi", model: "MV2400S", travel: "600 × 400 × 310", sheet: `${IMG}/ckimg/ck1762074857.jpeg` },
+    ],
+    photos: [
+      p("/submainPic/17620717026MV2400S.jpeg", "mv2400s"),
+      p("/submainPic/17620704267MV1200S.jpeg", "mv1200s"),
+      p("/submainPic/17620727038%E6%A9%9F%E9%A0%AD.jpg", "wireHead"),
+      p("/submainPic/17620726529%E7%B7%9A%E5%88%87%E5%89%B2%E6%B0%B4%E4%B8%AD1.jpg", "submerged"),
+    ],
+  },
+  {
+    id: "milling",
+    units: 27,
+    models: [{ brand: "—", model: "4-axis", travel: "1800 × 800 × 700" }],
+    photos: [
+      p("/submainPic/17617317756e-1800.png"),
+      p("/submainPic/17617882687260743.jpg"),
+      p("/submainPic/17617882688260756.jpg"),
+      p("/submainPic/17617882689260757.jpg"),
+      p("/submainPic/176178826810260760.jpg"),
+    ],
+  },
+  {
+    id: "drill",
+    units: 7,
+    models: [
+      { brand: "晏陽", model: "SY-CNC4050T", travel: "500 × 400 × 350", note: "atc10", sheet: `${IMG}/ckimg/ck1762074402.jpg` },
+      { brand: "歐群", model: "River 350", travel: "350 × 250 × 330", note: "atc12", sheet: `${IMG}/ckimg/ck1762074601.jpg` },
+    ],
+    photos: [p("/submainPic/17620734186p-190115-07964.jpg"), p("/submainPic/17620734187River-350.jpg", "river350")],
+  },
+  {
+    id: "sinker",
+    models: [{ brand: "Mitsubishi", model: "SV8P", travel: "300 × 250 × 250", note: "thread", sheet: `${IMG}/ckimg/ck1762075233.jpeg` }],
+    photos: [p("/submainPic/17620749456%E6%94%BE%E9%9B%BB.jpeg")],
+  },
+  {
+    id: "grinding",
+    units: 5,
+    models: [{ brand: "—", model: "NC" }],
+    photos: [p("/submainPic/17617903986%E7%A3%A8%E5%BA%8A1.jpg")],
+  },
+  {
+    id: "press",
+    models: [{ brand: "—", model: "110 t" }],
+    photos: [p("/submainPic/17617894556%E6%B2%96%E5%BA%8A.jpg"), p("/submainPic/17617894557%E6%B2%96%E5%BA%8A2.jpg")],
+  },
+  {
+    id: "inspection",
+    models: [{ brand: "Keyence", model: "VR-6000", note: "profilometer" }],
+    photos: [p("/submainPic/17617321896%E5%9F%BA%E6%81%A9%E6%96%AF.jpg", "keyence")],
+  },
+];
+
+/** Sum of the unit counts the company publishes (press, sinker EDM and inspection are not stated). */
+export const statedUnits = machines.reduce((n, m) => n + (m.units ?? 0), 0);
+
+export const history = [2020, 2021, 2022, 2024, 2025, 2026] as const;
+
+export const materials = ["SKD11", "SKD61", "S136", "NAK80", "SUS304", "SUS430", "Al 6061", "C1100", "Graphite", "Carbide"] as const;
+
+export const acceptedExt = [".step", ".stp", ".iges", ".igs", ".dxf", ".dwg", ".pdf", ".x_t", ".zip"];
+/** Vercel serverless functions accept request bodies up to 4.5 MB. */
+export const maxUploadBytes = 4 * 1024 * 1024;
