@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Máy móc</title>
+  <meta name="description" content="Danh sách máy móc đang vận hành tại xưởng, kèm ảnh thực tế và mô hình 3D theo kích thước lắp đặt.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap site-header__inner">
+      <a class="brand" href="./">Tên công ty</a>
+      <nav aria-label="Điều hướng chính">
+        <a href="may-moc.html" aria-current="page">Máy móc</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="page-intro">
+      <h1>Máy móc</h1>
+      <p>Các máy đang vận hành tại xưởng. Mỗi máy có ảnh chụp thực tế và mô hình 3D dựng theo kích thước lắp đặt để tiện tính mặt bằng.</p>
+    </section>
+
+    <article class="machine" id="mv1200s" aria-labelledby="mv1200s-title">
+      <header class="machine__head">
+        <p class="machine__type">Máy cắt dây EDM</p>
+        <h2 id="mv1200s-title">MV1200S</h2>
+        <dl class="dims" aria-label="Kích thước lắp đặt">
+          <div><dt>Dài</dt><dd>2.025<span>mm</span></dd></div>
+          <div><dt>Rộng</dt><dd>2.760<span>mm</span></dd></div>
+          <div><dt>Cao</dt><dd>2.015<span>mm</span></dd></div>
+        </dl>
+      </header>
+
+      <div class="machine__media">
+        <figure class="viewer">
+          <div class="viewer__stage" data-model="mv1200s" role="img"
+               aria-label="Mô hình 3D máy cắt dây MV1200S, kích thước bao 2.025 × 2.760 × 2.015 mm">
+            <p class="viewer__fallback">Đang tải mô hình 3D…</p>
+          </div>
+          <figcaption class="viewer__bar">
+            <span>Hình ảnh 3D minh họa</span>
+            <span class="viewer__actions">
+              <button type="button" data-action="dims" aria-pressed="true">Kích thước</button>
+              <button type="button" data-action="reset">Góc nhìn ban đầu</button>
+            </span>
+          </figcaption>
+          <ul class="viewer__help">
+            <li>Kéo để xoay</li>
+            <li>Cuộn để phóng to</li>
+            <li>Chuột phải để di chuyển</li>
+          </ul>
+        </figure>
+
+        <figure class="photo">
+          <button type="button" class="photo__open" data-lightbox="mv1200s-photo" aria-label="Phóng to ảnh thực tế máy MV1200S">
+            <img src="assets/img/may-moc/mv1200s-photo.jpg" alt="Ảnh chụp thực tế máy cắt dây MV1200S tại xưởng" loading="lazy" width="1200" height="900">
+          </button>
+          <figcaption>Ảnh thực tế. Bấm để phóng to.</figcaption>
+        </figure>
+      </div>
+
+      <p class="machine__note">Mô hình dựng lại từ ảnh chụp máy, kích thước bao khớp đúng 2.025 × 2.760 × 2.015 mm. Phần phía sau và bên trong máy chỉ mang tính minh họa.</p>
+    </article>
+  </main>
+
+  <dialog class="lightbox" id="mv1200s-photo">
+    <form method="dialog"><button class="lightbox__close" aria-label="Đóng ảnh">Đóng</button></form>
+    <img src="assets/img/may-moc/mv1200s-photo.jpg" alt="Ảnh chụp thực tế máy cắt dây MV1200S, cỡ lớn">
+  </dialog>
+
+  <script src="assets/js/page.js" defer></script>
+  <script type="module" src="assets/js/machine-3d.js"></script>
+</body>
+</html>
