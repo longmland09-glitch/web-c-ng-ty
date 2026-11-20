@@ -127,7 +127,17 @@ export const products: ProductData[] = [
 ];
 
 export type MachineModel = { brand: string; model: string; travel?: string; note?: string; sheet?: string };
-export type MachineData = { id: string; units?: number; models: MachineModel[]; photos: Photo[] };
+export type MachineData = {
+  id: string;
+  units?: number;
+  models: MachineModel[];
+  photos: Photo[];
+  /**
+   * Optional background-removed PNG of the machine (e.g. "/machines/wire.png" in /public).
+   * When set, the machinery card shows it floating on the black stage instead of the faded photo.
+   */
+  cutout?: string;
+};
 
 export const machines: MachineData[] = [
   {

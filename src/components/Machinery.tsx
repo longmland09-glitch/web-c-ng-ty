@@ -2,12 +2,43 @@ import type { Dict } from "@/lib/i18n";
 import { fill } from "@/lib/i18n";
 import { banners, company, machines, statedUnits } from "@/lib/data";
 import Gallery from "./Gallery";
+import MachineStage from "./MachineStage";
 import RemoteImg from "./RemoteImg";
 
 export default function Machinery({ t, cases, captions }: { t: Dict["machinery"]; cases: Dict["cases"]; captions: Dict["captions"] }) {
   const inspection = machines.find((m) => m.id === "inspection")!;
   return (
     <>
+      <ul className="showcase">
+        {machines.map((m) => {
+          const slides = m.photos.map((ph) => ({ src: ph.src, caption: ph.caption ? captions[ph.caption] : t.groups[m.id] }));
+          return (
+            <li key={m.id} className="show-card">
+              <Gallery title={t.groups[m.id]} slides={slides} labels={cases} className="show-open">
+                <MachineStage src={m.cutout ?? m.photos[0].src} cutout={!!m.cutout} alt={t.groups[m.id]} />
+                <span className="show-meta">
+                  <span className="show-name">{t.groups[m.id]}</span>
+                  {m.units && (
+                    <span className="show-units">
+                      {t.cols.units}: <b>{m.units}</b>
+                    </span>
+                  )}
+                </span>
+                <span className="show-models">
+                  {m.models
+                    .filter((md) => md.brand !== "—" || md.model)
+                    .map((md) => (md.brand !== "—" ? `${md.brand} ${md.model}` : md.model))
+                    .join(" · ")}
+                </span>
+                <span className="show-count">
+                  {slides.length} {slides.length === 1 ? t.photo : t.photos}
+                </span>
+              </Gallery>
+            </li>
+          );
+        })}
+      </ul>
+
       <div className="mach-table" role="table" aria-label={t.title}>
         <div className="mach-row mach-head" role="row">
           <span role="columnheader">{t.cols.equipment}</span>
@@ -17,25 +48,12 @@ export default function Machinery({ t, cases, captions }: { t: Dict["machinery"]
           <span role="columnheader">{t.cols.notes}</span>
         </div>
         {machines.map((m) => {
-          const slides = m.photos.map((ph) => ({ src: ph.src, caption: ph.caption ? captions[ph.caption] : t.groups[m.id] }));
           return (
             <div className="mach-group" role="rowgroup" key={m.id}>
               {m.models.map((md, k) => (
                 <div className="mach-row" role="row" key={md.model}>
                   <span role="cell" className="mach-name">
-                    {k === 0 && (
-                      <>
-                        {m.photos[0] && (
-                          <Gallery title={t.groups[m.id]} slides={slides} labels={cases} className="mach-thumb">
-                            <RemoteImg src={m.photos[0].src} alt={t.groups[m.id]} />
-                            <span className="sr-only">
-                              {slides.length} {t.photos}
-                            </span>
-                          </Gallery>
-                        )}
-                        <strong>{t.groups[m.id]}</strong>
-                      </>
-                    )}
+                    {k === 0 && <strong>{t.groups[m.id]}</strong>}
                   </span>
                   <span role="cell" className="num" data-label={t.cols.units}>
                     {k === 0 ? (m.units ?? t.notStated) : ""}
@@ -64,9 +82,7 @@ export default function Machinery({ t, cases, captions }: { t: Dict["machinery"]
       <p className="mach-total">{fill(t.total, { n: statedUnits })}</p>
 
       <div className="metrology">
-        <div className="metrology-media">
-          <RemoteImg src={inspection.photos[0].src} alt={captions.keyence} />
-        </div>
+        <MachineStage className="metrology-media" src={inspection.cutout ?? inspection.photos[0].src} cutout={!!inspection.cutout} alt={captions.keyence} />
         <div className="metrology-body">
           <h3>{t.metrologyTitle}</h3>
           <p>{t.metrologyBody}</p>

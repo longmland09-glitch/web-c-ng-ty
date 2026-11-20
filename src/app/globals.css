@@ -1076,15 +1076,9 @@ li.file-total[data-over] {
   object-fit: cover;
   opacity: 0.07;
 }
-.metrology-media {
-  aspect-ratio: 4 / 3;
-  background: #fff;
-}
-.metrology-media img,
-.metrology-media .img-fallback {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
+.metrology .metrology-media {
+  aspect-ratio: auto;
+  min-height: 340px;
 }
 .metrology-body {
   padding: clamp(24px, 4vw, 48px);
@@ -1513,4 +1507,181 @@ li.file-total[data-over] {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ───────── Studio stage: black backdrop, back-light, reflection, 3D tilt ───────── */
+.stage {
+  --rx: 0deg;
+  --ry: 0deg;
+  --lx: 50%;
+  position: relative;
+  display: block;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: radial-gradient(120% 90% at 50% 110%, #15100b 0%, #000 55%);
+  perspective: 900px;
+  isolation: isolate;
+}
+.stage-light {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(48% 58% at var(--lx) 36%, rgba(255, 255, 255, 0.13), rgba(255, 138, 31, 0.07) 45%, transparent 72%);
+  transition: background-position 300ms var(--ease);
+}
+.stage-floor {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 9%;
+  height: 22%;
+  z-index: -1;
+  background: radial-gradient(50% 50% at 50% 40%, rgba(255, 255, 255, 0.07), transparent 70%);
+}
+.stage-floor::after {
+  /* horizon line where the "studio sweep" meets the floor */
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  top: 38%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 138, 31, 0.45), transparent);
+}
+.stage-object {
+  position: absolute;
+  inset: 7% 9% 20%;
+  display: block;
+  transform: rotateX(var(--rx)) rotateY(var(--ry));
+  transform-style: preserve-3d;
+  transition: transform 350ms var(--ease);
+  filter: drop-shadow(0 26px 22px rgba(0, 0, 0, 0.95)) drop-shadow(0 0 36px rgba(255, 138, 31, 0.14));
+}
+.stage-object img,
+.stage-object .img-fallback {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  /* fade the photo's own background into the black stage */
+  -webkit-mask-image: radial-gradient(ellipse 60% 58% at 50% 50%, #000 46%, rgba(0, 0, 0, 0.55) 70%, transparent 100%);
+  mask-image: radial-gradient(ellipse 60% 58% at 50% 50%, #000 46%, rgba(0, 0, 0, 0.55) 70%, transparent 100%);
+  filter: contrast(1.22) saturate(0.85) brightness(0.86);
+  -webkit-box-reflect: below 6px linear-gradient(transparent 74%, rgba(255, 255, 255, 0.16));
+}
+.stage-object .img-fallback {
+  background: radial-gradient(closest-side, #23272c, #111);
+}
+/* a background-removed PNG needs no fade: show it whole, floating on the stage */
+.stage[data-cutout] .stage-object img {
+  object-fit: contain;
+  -webkit-mask-image: none;
+  mask-image: none;
+  filter: none;
+}
+.stage:hover .stage-object {
+  transform: rotateX(var(--rx)) rotateY(var(--ry)) translateZ(24px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .stage-object,
+  .stage:hover .stage-object {
+    transform: none;
+  }
+}
+
+/* Showcase grid */
+.showcase {
+  display: grid;
+  gap: 14px;
+  margin-bottom: clamp(40px, 6vw, 64px);
+}
+@media (min-width: 600px) {
+  .showcase {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1080px) {
+  .showcase {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .show-card:first-child {
+    grid-column: span 2;
+  }
+  .show-card:first-child .stage {
+    /* two columns wide, same height as a single 4:3 card */
+    aspect-ratio: 8 / 3;
+    display: flex;
+    justify-content: center;
+  }
+  /* keep the featured machine at photo proportions, centred on the wide stage */
+  .show-card:first-child .stage-object {
+    position: relative;
+    inset: auto;
+    height: 78%;
+    margin-top: 3%;
+    aspect-ratio: 4 / 3;
+  }
+  .show-card:first-child .show-name {
+    font-size: 1.875rem;
+  }
+}
+.show-card {
+  display: flex;
+}
+.show-open {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  width: 100%;
+  padding: 0;
+  text-align: left;
+  border-radius: var(--r-l);
+  border: 1px solid var(--line);
+  background: #000;
+  overflow: hidden;
+  cursor: zoom-in;
+  transition: border-color 200ms var(--ease), box-shadow 200ms var(--ease);
+}
+.show-open:hover {
+  border-color: rgba(255, 138, 31, 0.6);
+  box-shadow: 0 24px 60px -30px rgba(255, 138, 31, 0.45);
+}
+.show-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding: 14px 18px 2px;
+  border-top: 1px solid var(--line);
+  background: linear-gradient(180deg, #0b0b0c, #000);
+}
+.show-name {
+  font-family: var(--display);
+  font-size: 1.375rem;
+  font-weight: 600;
+}
+.show-units {
+  color: var(--text-2);
+  font-size: 0.875rem;
+}
+.show-units b {
+  color: var(--accent);
+  font-family: var(--display);
+  font-size: 1.25rem;
+}
+.show-models {
+  padding: 0 18px;
+  color: var(--text-2);
+  font-size: 0.875rem;
+  background: #000;
+}
+.show-count {
+  padding: 6px 18px 14px;
+  color: var(--accent-2);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: #000;
+}
+.metrology {
+  background: #000;
 }

@@ -40,6 +40,14 @@ Toàn bộ 61 ảnh (trừ ảnh giữ chỗ) đang được **tải trực ti�
 (trang hiển thị khung thay thế, không bị vỡ). Để tự lưu ảnh: tải từng file vào `public/images/` giữ nguyên đường dẫn, rồi đổi
 `IMG` trong `src/lib/data.ts` thành `""` và thêm `/images` vào đầu các đường dẫn.
 
+## Ảnh máy móc nền đen, nổi khối 3D
+
+Mục Máy móc hiển thị mỗi máy trên "sân khấu" đen (`src/components/MachineStage.tsx`): đèn rọi phía sau, viền ảnh mờ dần vào nền đen,
+bóng đổ, phản chiếu dưới sàn, nghiêng 3D theo chuột. Với ảnh chụp có nền sáng, nền chỉ được làm mờ ở viền chứ không bị xóa hẳn.
+
+Để có ảnh tách nền thật: tạo file PNG nền trong suốt cho từng máy, đặt vào `public/machines/` (ví dụ `wire.png`),
+rồi thêm `cutout: "/machines/wire.png"` vào máy tương ứng trong `src/lib/data.ts` → `machines`.
+
 ## Cần bổ sung từ công ty
 
 Website cũ không công bố các thông tin sau, nên trang **chưa hiển thị** chúng (không bịa số liệu):

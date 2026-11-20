@@ -155,6 +155,7 @@ const en = {
       "Parts are checked on a Keyence VR-6000 3D optical profiler, which measures shape and surface roughness without touching the part. We also build automatic height and roughness measuring stations that output inspection reports.",
     certTitle: "Certificates",
     photos: "photos",
+    photo: "photo",
   },
   rfq: {
     label: "3D RFQ portal",
@@ -345,6 +346,7 @@ const zhTW: Dict = {
     metrologyBody: "工件以基恩斯 VR-6000 3D 輪廓量測儀檢測，非接觸量測形狀與表面粗糙度。我們也製作可自動測高、測粗糙度並輸出報表的量測設備。",
     certTitle: "認證",
     photos: "張照片",
+    photo: "張照片",
   },
   rfq: {
     label: "3D 線上詢價",
@@ -533,6 +535,7 @@ const ja: Dict = {
     metrologyBody: "キーエンス VR-6000 3D形状測定機で、形状と表面粗さを非接触で測定します。高さ・粗さを自動測定しレポートを出力する検査装置も製作しています。",
     certTitle: "認証",
     photos: "枚",
+    photo: "枚",
   },
   rfq: {
     label: "3D見積ポータル",
@@ -722,6 +725,7 @@ const vi: Dict = {
       "Chi tiết được kiểm tra trên máy đo biên dạng 3D Keyence VR-6000, đo hình dạng và độ nhám bề mặt mà không chạm vào chi tiết. Chúng tôi cũng chế tạo trạm đo cao và đo nhám tự động có xuất báo cáo.",
     certTitle: "Chứng chỉ",
     photos: "ảnh",
+    photo: "ảnh",
   },
   rfq: {
     label: "Cổng báo giá 3D",
