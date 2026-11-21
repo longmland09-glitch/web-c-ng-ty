@@ -155,13 +155,13 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
 
       // ── spindle with end mill (origin = tool tip) ──
       const spindle = new THREE.Group();
-      const cyl = (r1: number, r2: number, h: number, y: number, m: import("three").Material, seg = 40) => {
-        const g = new THREE.CylinderGeometry(r1, r2, h, seg);
-        g.translate(0, y + h / 2, 0);
-        return add(g, m, spindle);
-      };
       const tool = new THREE.Group();
       spindle.add(tool);
+      const cyl = (r1: number, r2: number, h: number, y: number, m: import("three").Material, seg = 40, parent: import("three").Object3D = spindle) => {
+        const g = new THREE.CylinderGeometry(r1, r2, h, seg);
+        g.translate(0, y + h / 2, 0);
+        return add(g, m, parent);
+      };
       const mill = new THREE.CylinderGeometry(0.035, 0.035, 0.42, 20);
       mill.translate(0, 0.21, 0);
       tool.add(new THREE.Mesh(mill, carbide));
@@ -169,10 +169,10 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
       const flutePts: import("three").Vector3[] = [];
       for (let i = 0; i <= 60; i++) flutePts.push(new THREE.Vector3(Math.cos(i * 0.42) * 0.037, (i / 60) * 0.3, Math.sin(i * 0.42) * 0.037));
       tool.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(flutePts), new THREE.LineBasicMaterial({ color: 0xd8dde2 })));
-      cyl(0.06, 0.06, 0.06, 0.42, holder); // collet
-      cyl(0.1, 0.07, 0.12, 0.48, holder); // collet nut
-      cyl(0.13, 0.1, 0.22, 0.6, holder); // holder body
-      cyl(0.22, 0.13, 0.16, 0.82, holder); // taper flange
+      cyl(0.06, 0.06, 0.06, 0.42, holder, 40, tool); // collet
+      cyl(0.1, 0.07, 0.12, 0.48, holder, 8, tool); // collet nut (faceted, so the spin shows)
+      cyl(0.13, 0.1, 0.22, 0.6, holder, 40, tool); // holder body
+      cyl(0.22, 0.13, 0.16, 0.82, holder, 12, tool); // taper flange
       const flange = cyl(0.24, 0.24, 0.05, 0.98, body);
       flange.userData.keep = true;
       cyl(0.36, 0.36, 1.4, 1.03, body, 48); // spindle housing
@@ -194,16 +194,41 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
       scene.add(key, warm, new THREE.AmbientLight(0x3a4250, 0.5));
 
       // ── chips at the cutting point ──
-      const CN = 160;
+      const CN = 320;
       const cpos = new Float32Array(CN * 3), cvel = new Float32Array(CN * 3), clife = new Float32Array(CN);
       const chipGeo = new THREE.BufferGeometry();
       chipGeo.setAttribute("position", new THREE.BufferAttribute(cpos, 3));
       const chips = new THREE.Points(
         chipGeo,
-        new THREE.PointsMaterial({ color: 0xffc07a, size: 0.028, transparent: true, opacity: 0.9, depthWrite: false }),
+        new THREE.PointsMaterial({ color: 0xffb35c, size: 0.04, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }),
       );
       scene.add(chips);
       for (let i = 0; i < CN; i++) cpos[i * 3 + 1] = -10;
+      // streaks: a short line from each spark back along its velocity
+      const spos = new Float32Array(CN * 6);
+      const streakGeo = new THREE.BufferGeometry();
+      streakGeo.setAttribute("position", new THREE.BufferAttribute(spos, 3));
+      const streaks = new THREE.LineSegments(
+        streakGeo,
+        new THREE.LineBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false }),
+      );
+      scene.add(streaks);
+      // glow sprite at the cutting point
+      const glowTex = (() => {
+        const c = document.createElement("canvas");
+        c.width = c.height = 64;
+        const g = c.getContext("2d")!;
+        const r = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+        r.addColorStop(0, "rgba(255,240,200,1)");
+        r.addColorStop(0.25, "rgba(255,160,60,0.8)");
+        r.addColorStop(1, "rgba(255,120,20,0)");
+        g.fillStyle = r;
+        g.fillRect(0, 0, 64, 64);
+        return new THREE.CanvasTexture(c);
+      })();
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
+      glow.scale.setScalar(0.3);
+      scene.add(glow);
 
       // ── toggles ──
       const setWire = (on: boolean) => {
@@ -230,7 +255,7 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
       resize();
 
       const clock = new THREE.Clock();
-      let raf = 0, visible = true, progress = reduce ? pathPts * 0.55 : 0;
+      let raf = 0, visible = true, cutting = true, progress = reduce ? pathPts * 0.55 : 0;
       const tip = new THREE.Vector3();
       const place = (f: number) => {
         const i = Math.min(Math.floor(f), pathPts - 2), u = f - i;
@@ -239,7 +264,12 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
           path[i * 3 + 1] + (path[i * 3 + 4] - path[i * 3 + 1]) * u,
           path[i * 3 + 2] + (path[i * 3 + 5] - path[i * 3 + 2]) * u,
         );
+        // lift between passes: retract near the end of a pass, plunge at the start of the next
+        const k = (f % 61) / 61;
+        const lift = k < 0.06 ? (0.06 - k) / 0.06 : k > 0.94 ? (k - 0.94) / 0.06 : 0;
         spindle.position.copy(tip);
+        spindle.position.y += 0.28 * lift * lift;
+        cutting = lift < 0.05;
         trailGeo.setDrawRange(0, i + 1);
       };
       place(progress);
@@ -247,29 +277,44 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
       const frame = () => {
         const dt = Math.min(clock.getDelta(), 0.05);
         if (!reduce) {
-          progress += dt * 38;
+          progress += dt * 34;
           if (progress >= pathPts - 1) progress = 0;
           place(progress);
           tool.rotation.y += dt * 40;
+          const flick = cutting ? 0.7 + Math.random() * 0.6 : 0;
           warm.position.copy(tip).add(new THREE.Vector3(0, 0.06, 0));
-          warm.intensity = 0.8 + Math.random() * 0.6;
+          warm.intensity = 2.2 * flick;
+          glow.position.copy(tip).add(new THREE.Vector3(0, 0.03, 0));
+          glow.scale.setScalar(0.18 + 0.22 * flick);
+          glow.material.opacity = flick;
           for (let i = 0; i < CN; i++) {
             clife[i] -= dt;
             if (clife[i] <= 0) {
-              if (Math.random() < 0.35) {
-                const a = Math.random() * Math.PI * 2, sp = 0.5 + Math.random() * 1.4;
+              if (cutting && Math.random() < 0.6) {
+                const a = Math.random() * Math.PI * 2, sp = 0.8 + Math.random() * 2.2;
                 cpos.set([tip.x, tip.y + 0.02, tip.z], i * 3);
-                cvel.set([Math.cos(a) * sp, 0.6 + Math.random() * 1.3, Math.sin(a) * sp], i * 3);
-                clife[i] = 0.3 + Math.random() * 0.5;
-              } else cpos[i * 3 + 1] = -10;
+                cvel.set([Math.cos(a) * sp, 0.8 + Math.random() * 2, Math.sin(a) * sp], i * 3);
+                clife[i] = 0.25 + Math.random() * 0.55;
+              } else {
+                cpos[i * 3 + 1] = -10;
+                spos.fill(-10, i * 6, i * 6 + 6);
+              }
               continue;
             }
             cvel[i * 3 + 1] -= 5 * dt;
             cpos[i * 3] += cvel[i * 3] * dt;
             cpos[i * 3 + 1] += cvel[i * 3 + 1] * dt;
             cpos[i * 3 + 2] += cvel[i * 3 + 2] * dt;
+            // bounce off the workpiece top
+            if (cpos[i * 3 + 1] < y0 + baseH - 0.15 && Math.abs(cpos[i * 3]) < SX / 2 && Math.abs(cpos[i * 3 + 2]) < SZ / 2) {
+              cpos[i * 3 + 1] = y0 + baseH - 0.15;
+              cvel[i * 3 + 1] *= -0.3;
+            }
+            const L = 0.035;
+            spos.set([cpos[i * 3], cpos[i * 3 + 1], cpos[i * 3 + 2], cpos[i * 3] - cvel[i * 3] * L, cpos[i * 3 + 1] - cvel[i * 3 + 1] * L, cpos[i * 3 + 2] - cvel[i * 3 + 2] * L], i * 6);
           }
           chipGeo.attributes.position.needsUpdate = true;
+          streakGeo.attributes.position.needsUpdate = true;
         }
         controls.update();
         renderer.render(scene, camera);
@@ -305,6 +350,7 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
         document.removeEventListener("visibilitychange", onVis);
         scene.traverse((o) => (o as unknown as { geometry?: { dispose(): void } }).geometry?.dispose());
         [...mats, edge].forEach((m) => m.dispose());
+        glowTex.dispose();
         pmrem.dispose();
         controls.dispose();
         renderer.dispose();
