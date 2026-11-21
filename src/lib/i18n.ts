@@ -112,6 +112,8 @@ const en = {
   },
   captions: {
     producedCarrier: "IC/SMT carrier: CAD model and the finished part",
+    producedMagazine: "Magazine: finished part",
+    copperRing: "Slotted copper ring: CAD model and finished part",
     vacuumPlate12: "12-position vacuum plate with X-shaped suction grooves",
     vacuumPlate2: "2-position vacuum plate: drawing and finished part",
     vacuumBase: "Vacuum base with cross groove: drawing and finished part",
@@ -308,6 +310,8 @@ const zhTW: Dict = {
   },
   captions: {
     producedCarrier: "IC/SMT 載具：CAD 模型與實際成品",
+    producedMagazine: "magazine 料盒：實際成品",
+    copperRing: "開槽銅環：CAD 模型與實際成品",
     vacuumPlate12: "12 穴真空吸盤，X 形吸氣溝槽",
     vacuumPlate2: "2 穴真空吸盤：圖面與實際成品",
     vacuumBase: "十字溝槽真空吸座：圖面與實際成品",
@@ -501,6 +505,8 @@ const ja: Dict = {
   },
   captions: {
     producedCarrier: "IC/SMT キャリア：CADモデルと完成品",
+    producedMagazine: "マガジン：完成品",
+    copperRing: "スリット加工銅リング：CADモデルと完成品",
     vacuumPlate12: "12個取り真空吸着プレート（X字吸引溝）",
     vacuumPlate2: "2個取り真空吸着プレート：図面と完成品",
     vacuumBase: "十字溝付き真空吸着ベース：図面と完成品",
@@ -694,6 +700,8 @@ const vi: Dict = {
   },
   captions: {
     producedCarrier: "Đồ gá IC/SMT: mô hình CAD và sản phẩm thực tế đã sản xuất",
+    producedMagazine: "Hộp magazine: sản phẩm thực tế đã sản xuất",
+    copperRing: "Vòng đồng xẻ rãnh: mô hình CAD và sản phẩm thực tế",
     vacuumPlate12: "Tấm hút chân không 12 vị trí, rãnh hút chữ X",
     vacuumPlate2: "Tấm hút chân không 2 vị trí: bản vẽ và sản phẩm thực tế",
     vacuumBase: "Đế hút chân không rãnh chữ thập: bản vẽ và sản phẩm thực tế",

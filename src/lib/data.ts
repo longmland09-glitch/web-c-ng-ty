@@ -79,13 +79,13 @@ export const products: ProductData[] = [
   {
     id: "magazine",
     industry: "semi",
-    photos: [p("/submainPic/17618849966S__37814277.jpg"), p("/ckimg/ck1762250710.jpg")],
+    photos: [{ src: "/images/magazine.webp", caption: "producedMagazine", position: "center 35%" }, p("/ckimg/ck1762250710.jpg")],
   },
   {
     id: "wirecut",
     industry: "mould",
     photos: [
-      p("/submainPic/17620851206IMG_1916.jpeg"),
+      { src: "/images/wirecut-copper-ring.webp", caption: "copperRing", position: "center 45%" },
       p("/ckimg/ck1762084530.jpeg", "copperElectrode"),
       p("/ckimg/ck1762403162.jpg", "fineRib"),
       p("/ckimg/ck1762084756.jpeg", "precisionMould"),
