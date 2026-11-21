@@ -99,21 +99,14 @@ export const products: ProductData[] = [
     id: "equipment",
     industry: "auto",
     photos: [
-      p("/submainPic/176302186761762830969727.jpg"),
-      p("/ckimg/ck1763023844.jpg"),
-      p("/ckimg/ck1763022035.jpg"),
-      p("/ckimg/ck1763022921.jpg"),
-      p("/ckimg/ck1763022978.jpg"),
+      { src: "/images/measure-3d-turntable.webp", caption: "measure3d", position: "75% center" },
     ],
   },
   {
     id: "robot",
     industry: "auto",
     photos: [
-      p("/ckimg/ck1763255235.jpg"),
-      p("/submainPic/1763079903%E6%B8%85%E6%B4%97%E5%B7%A5%E4%BB%B6%E5%A4%96%E8%A7%80%E5%8F%83%E8%80%83.jpg", "afterCleaning"),
-      p("/ckimg/ck1763080104.jpg"),
-      p("/ckimg/ck1763080163.jpg"),
+      { src: "/images/robot-washer.webp", caption: "robotWasher", position: "62% center" },
     ],
   },
   {
@@ -164,7 +157,7 @@ export const machines: MachineData[] = [
       { brand: "—", model: "e-1800", travel: "1800 × 800 × 700", note: "axis4" },
     ],
     photos: [
-      { src: "/images/e-750a.webp", caption: "e750a" },
+      { src: "/images/mill-e-750.webp", caption: "e750a" },
       { src: "/images/mill-e-1800.webp", caption: "e1800" },
       p("/submainPic/17617882687260743.jpg"),
       p("/submainPic/17617882688260756.jpg"),
@@ -184,7 +177,7 @@ export const machines: MachineData[] = [
   {
     id: "sinker",
     models: [{ brand: "Mitsubishi", model: "SV8P", travel: "300 × 250 × 250", note: "thread", sheet: `${IMG}/ckimg/ck1762075233.jpeg` }],
-    photos: [p("/submainPic/17620749456%E6%94%BE%E9%9B%BB.jpeg")],
+    photos: [{ src: "/images/sinker-sv8p.webp", caption: "sv8p" }],
   },
   {
     id: "grinding",

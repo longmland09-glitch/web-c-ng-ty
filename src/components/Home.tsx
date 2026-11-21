@@ -15,10 +15,11 @@ const photo = (id: string, i = 0) => machines.find((m) => m.id === id)!.photos[i
 export default function Home({ locale }: { locale: Locale }) {
   const t = dictionaries[locale];
   const tiles = [
+    // photos that are not a machinery-card cover, so nothing repeats on the page
     { id: "wire", img: photo("wire", 3) },
     { id: "milling", img: photo("milling", 1) },
-    { id: "sinker", img: photo("sinker") },
-    { id: "inspection", img: photo("inspection") },
+    { id: "drill", img: photo("drill", 1) },
+    { id: "grinding", img: photo("grinding", 1) },
   ];
 
   return (

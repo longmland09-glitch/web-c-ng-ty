@@ -1,12 +1,10 @@
 import type { Dict } from "@/lib/i18n";
 import { fill } from "@/lib/i18n";
-import { banners, company, machines, statedUnits } from "@/lib/data";
+import { company, machines, statedUnits } from "@/lib/data";
 import Gallery from "./Gallery";
 import MachineStage from "./MachineStage";
-import RemoteImg from "./RemoteImg";
 
 export default function Machinery({ t, cases, captions }: { t: Dict["machinery"]; cases: Dict["cases"]; captions: Dict["captions"] }) {
-  const inspection = machines.find((m) => m.id === "inspection")!;
   return (
     <>
       <ul className="showcase">
@@ -82,7 +80,6 @@ export default function Machinery({ t, cases, captions }: { t: Dict["machinery"]
       <p className="mach-total">{fill(t.total, { n: statedUnits })}</p>
 
       <div className="metrology">
-        <MachineStage className="metrology-media" src={inspection.cutout ?? inspection.photos[0].src} cutout={!!inspection.cutout} alt={captions.keyence} />
         <div className="metrology-body">
           <h3>{t.metrologyTitle}</h3>
           <p>{t.metrologyBody}</p>
@@ -103,7 +100,6 @@ export default function Machinery({ t, cases, captions }: { t: Dict["machinery"]
             </div>
           )}
         </div>
-        <RemoteImg className="metrology-bg" src={banners.equipment} alt="" aria-hidden="true" />
       </div>
     </>
   );
