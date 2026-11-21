@@ -150,8 +150,8 @@ export const machines: MachineData[] = [
       { brand: "Mitsubishi", model: "MV2400S", travel: "600 × 400 × 310", sheet: `${IMG}/ckimg/ck1762074857.jpeg` },
     ],
     photos: [
-      p("/submainPic/17620717026MV2400S.jpeg", "mv2400s"),
-      p("/submainPic/17620704267MV1200S.jpeg", "mv1200s"),
+      { src: "/images/mv1200s-shop.webp", caption: "mv1200s" },
+      { src: "/images/mv2400s-shop.webp", caption: "mv2400s" },
       p("/submainPic/17620727038%E6%A9%9F%E9%A0%AD.jpg", "wireHead"),
       p("/submainPic/17620726529%E7%B7%9A%E5%88%87%E5%89%B2%E6%B0%B4%E4%B8%AD1.jpg", "submerged"),
     ],
@@ -189,8 +189,14 @@ export const machines: MachineData[] = [
   {
     id: "grinding",
     units: 5,
-    models: [{ brand: "—", model: "NC" }],
-    photos: [p("/submainPic/17617903986%E7%A3%A8%E5%BA%8A1.jpg")],
+    models: [
+      { brand: "—", model: "NSG-618TS" },
+      { brand: "—", model: "4080NC" },
+    ],
+    photos: [
+      { src: "/images/grinder-nsg-618ts.webp", caption: "nsg618ts" },
+      { src: "/images/grinder-4080nc.webp", caption: "g4080nc" },
+    ],
   },
   {
     id: "press",
