@@ -68,13 +68,12 @@ export const products: ProductData[] = [
   {
     id: "vacuum",
     industry: "semi",
+    // own photos, hosted in /public
     photos: [
-      p("/submainPic/17617402856LINE_ALBUM_%E7%94%A2%E5%93%81%E4%BB%8B%E7%B4%B9_250915_3%20-%20%E8%A4%87%E8%A3%BD.jpg"),
-      p("/ckimg/ck1762173818.png"),
-      p("/submainPic/17617404927DSCF8669.JPG"),
-      p("/submainPic/17617406128S__86745161%20-%20%E8%A4%87%E8%A3%BD.jpg"),
-      p("/submainPic/17617414999LINE_ALBUM_%E7%94%A2%E5%93%81%E4%BB%8B%E7%B4%B9_250919_1.jpg"),
-      p("/submainPic/176174149910LINE_ALBUM_%E7%94%A2%E5%93%81%E4%BB%8B%E7%B4%B9_250915_2.jpg"),
+      { src: "/images/vacuum-plate-12.webp", caption: "vacuumPlate12", position: "center 30%" },
+      { src: "/images/vacuum-plate-2.webp", caption: "vacuumPlate2", position: "center 40%" },
+      { src: "/images/vacuum-base.webp", caption: "vacuumBase", position: "center 40%" },
+      { src: "/images/vacuum-nozzle.webp", caption: "vacuumNozzle", position: "center 40%" },
     ],
   },
   {

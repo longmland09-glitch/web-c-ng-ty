@@ -112,6 +112,10 @@ const en = {
   },
   captions: {
     producedCarrier: "IC/SMT carrier: CAD model and the finished part",
+    vacuumPlate12: "12-position vacuum plate with X-shaped suction grooves",
+    vacuumPlate2: "2-position vacuum plate: drawing and finished part",
+    vacuumBase: "Vacuum base with cross groove: drawing and finished part",
+    vacuumNozzle: "Pick-up nozzle: drawing and finished part",
     coverPlate: "Cover plate",
     copperElectrode: "Upper/lower profile copper electrode, wire cut",
     fineRib: "Fine-rib machining",
@@ -304,6 +308,10 @@ const zhTW: Dict = {
   },
   captions: {
     producedCarrier: "IC/SMT 載具：CAD 模型與實際成品",
+    vacuumPlate12: "12 穴真空吸盤，X 形吸氣溝槽",
+    vacuumPlate2: "2 穴真空吸盤：圖面與實際成品",
+    vacuumBase: "十字溝槽真空吸座：圖面與實際成品",
+    vacuumNozzle: "吸嘴：圖面與實際成品",
     coverPlate: "蓋板",
     copperElectrode: "上下異形銅極線切割",
     fineRib: "細骨頭加工",
@@ -493,6 +501,10 @@ const ja: Dict = {
   },
   captions: {
     producedCarrier: "IC/SMT キャリア：CADモデルと完成品",
+    vacuumPlate12: "12個取り真空吸着プレート（X字吸引溝）",
+    vacuumPlate2: "2個取り真空吸着プレート：図面と完成品",
+    vacuumBase: "十字溝付き真空吸着ベース：図面と完成品",
+    vacuumNozzle: "吸着ノズル：図面と完成品",
     coverPlate: "カバープレート",
     copperElectrode: "上下異形銅電極のワイヤーカット",
     fineRib: "細リブ加工",
@@ -682,6 +694,10 @@ const vi: Dict = {
   },
   captions: {
     producedCarrier: "Đồ gá IC/SMT: mô hình CAD và sản phẩm thực tế đã sản xuất",
+    vacuumPlate12: "Tấm hút chân không 12 vị trí, rãnh hút chữ X",
+    vacuumPlate2: "Tấm hút chân không 2 vị trí: bản vẽ và sản phẩm thực tế",
+    vacuumBase: "Đế hút chân không rãnh chữ thập: bản vẽ và sản phẩm thực tế",
+    vacuumNozzle: "Đầu hút: bản vẽ và sản phẩm thực tế",
     coverPlate: "Tấm che",
     copperElectrode: "Điện cực đồng biên dạng trên dưới khác nhau, cắt dây",
     fineRib: "Gia công gân mảnh",
