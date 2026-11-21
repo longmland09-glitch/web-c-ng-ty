@@ -32,7 +32,7 @@ export default function Cases({ t, captions }: { t: Dict["cases"]; captions: Dic
             <li key={p.id} className="case-card" data-industry={p.industry}>
               <div className="case-media">
                 {p.photos[0] ? (
-                  <RemoteImg src={p.photos[0].src} alt={item.name} />
+                  <RemoteImg src={p.photos[0].src} alt={item.name} style={{ objectPosition: p.photos[0].position }} />
                 ) : (
                   <span className="img-fallback">
                     <span>{t.noPhoto}</span>

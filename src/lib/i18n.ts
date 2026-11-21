@@ -111,7 +111,7 @@ const en = {
     } as Record<string, Named>,
   },
   captions: {
-    bossCarrier: "Boss-type carrier",
+    producedCarrier: "IC/SMT carrier: CAD model and the finished part",
     coverPlate: "Cover plate",
     copperElectrode: "Upper/lower profile copper electrode, wire cut",
     fineRib: "Fine-rib machining",
@@ -303,7 +303,7 @@ const zhTW: Dict = {
     },
   },
   captions: {
-    bossCarrier: "凸台型載具",
+    producedCarrier: "IC/SMT 載具：CAD 模型與實際成品",
     coverPlate: "蓋板",
     copperElectrode: "上下異形銅極線切割",
     fineRib: "細骨頭加工",
@@ -492,7 +492,7 @@ const ja: Dict = {
     },
   },
   captions: {
-    bossCarrier: "凸台型キャリア",
+    producedCarrier: "IC/SMT キャリア：CADモデルと完成品",
     coverPlate: "カバープレート",
     copperElectrode: "上下異形銅電極のワイヤーカット",
     fineRib: "細リブ加工",
@@ -681,7 +681,7 @@ const vi: Dict = {
     },
   },
   captions: {
-    bossCarrier: "Đồ gá dạng bệ nổi",
+    producedCarrier: "Đồ gá IC/SMT: mô hình CAD và sản phẩm thực tế đã sản xuất",
     coverPlate: "Tấm che",
     copperElectrode: "Điện cực đồng biên dạng trên dưới khác nhau, cắt dây",
     fineRib: "Gia công gân mảnh",

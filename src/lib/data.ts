@@ -37,7 +37,8 @@ export const banners = {
 
 export type Industry = "semi" | "mould" | "auto";
 /** caption keys refer to dictionary `captions` */
-export type Photo = { src: string; caption?: string };
+/** position: CSS object-position used when the photo is cropped on a card (default centre). */
+export type Photo = { src: string; caption?: string; position?: string };
 
 export type ProductData = {
   id: string;
@@ -55,7 +56,8 @@ export const products: ProductData[] = [
     id: "carriers",
     industry: "semi",
     photos: [
-      p("/submainPic/17617916956%E5%87%B8%E5%8F%B0%E5%9E%8B%E8%BC%89%E5%85%B7.jpg", "bossCarrier"),
+      // own photo, hosted in /public; the card crops to the product shot above the banner strip
+      { src: "/images/ic-smt-carrier.webp", caption: "producedCarrier", position: "center 30%" },
       p("/submainPic/17617242687%E8%93%8B%E6%9D%BF.jpg", "coverPlate"),
       p("/ckimg/ck1762173787.png"),
       p("/submainPic/17617401558%E6%9C%AA%E5%91%BD%E5%90%8D.png"),
