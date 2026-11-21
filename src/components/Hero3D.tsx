@@ -69,12 +69,10 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
       const slotMat = mat(0x1d2024, 0.5, 0.6);
       const white = mat(0xe8e9e8, 0.1, 0.45); // machine covers (head)
       const greyCov = mat(0xb9bcbf, 0.2, 0.5);
-      const wall = mat(0x2a2d31, 0.3, 0.7); // dim cabin walls so the cut is the focus
-      const wallSide = mat(0x34383c, 0.3, 0.7);
       const dark = mat(0x2e3236, 0.4, 0.55);
       const holder = mat(0xd4d8dc, 1, 0.18);
       const carbide = mat(0x4a4f55, 0.9, 0.3);
-      const mats = [part, groove, tableMat, slotMat, white, greyCov, wall, wallSide, dark, holder, carbide];
+      const mats = [part, groove, tableMat, slotMat, white, greyCov, dark, holder, carbide];
       const edge = new THREE.LineBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.25 });
 
       const add = (g: G, m: Mt, parent: O3, edges = true) => {
@@ -105,19 +103,10 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
         return new THREE.Mesh(new THREE.PlaneGeometry(w, h), m);
       };
 
-      // ── machine enclosure (fixed): back wall with window, side walls, floor tray ──
+      // ── machine base (fixed): floor tray and way covers ──
       const cabin = new THREE.Group();
-      boxAt(4.2, 3.2, 0.06, 0, 1.4, -1.55, wall, cabin, false);
-      boxAt(0.06, 3.2, 3.2, -2.1, 1.4, 0.05, wallSide, cabin, false);
+      // no walls: they hid the tool when the view rotates
       boxAt(4.2, 0.12, 3.2, 0, -0.24, 0.05, dark, cabin);
-      const win = new THREE.Mesh(
-        new THREE.PlaneGeometry(1.2, 1.0),
-        new THREE.MeshStandardMaterial({ color: 0x1a2a38, metalness: 0.3, roughness: 0.1, transparent: true, opacity: 0.85 }),
-      );
-      win.rotation.y = Math.PI / 2;
-      win.position.set(-2.06, 1.55, 0.2);
-      cabin.add(win);
-      boxAt(0.04, 1.1, 1.3, -2.07, 1.55, 0.2, dark, cabin, false);
       // telescopic way covers under the table
       for (let i = 0; i < 5; i++) boxAt(3.6 - i * 0.12, 0.05, 0.42, 0, -0.14 + i * 0.012, -1.0 + i * 0.03, dark, cabin, false);
       scene.add(cabin);
