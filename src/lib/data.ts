@@ -161,11 +161,11 @@ export const machines: MachineData[] = [
     units: 27,
     models: [
       { brand: "—", model: "e-750A", note: "vmc" },
-      { brand: "—", model: "4-axis", travel: "1800 × 800 × 700" },
+      { brand: "—", model: "e-1800", travel: "1800 × 800 × 700", note: "axis4" },
     ],
     photos: [
       { src: "/images/e-750a.webp", caption: "e750a" },
-      p("/submainPic/17617317756e-1800.png"),
+      { src: "/images/mill-e-1800.webp", caption: "e1800" },
       p("/submainPic/17617882687260743.jpg"),
       p("/submainPic/17617882688260756.jpg"),
       p("/submainPic/17617882689260757.jpg"),
@@ -179,7 +179,7 @@ export const machines: MachineData[] = [
       { brand: "晏陽", model: "SY-CNC4050T", travel: "500 × 400 × 350", note: "atc10", sheet: `${IMG}/ckimg/ck1762074402.jpg` },
       { brand: "歐群", model: "River 350", travel: "350 × 250 × 330", note: "atc12", sheet: `${IMG}/ckimg/ck1762074601.jpg` },
     ],
-    photos: [p("/submainPic/17620734186p-190115-07964.jpg"), p("/submainPic/17620734187River-350.jpg", "river350")],
+    photos: [{ src: "/images/drill-edm.webp", caption: "drillEdm" }, p("/submainPic/17620734187River-350.jpg", "river350")],
   },
   {
     id: "sinker",
@@ -192,21 +192,23 @@ export const machines: MachineData[] = [
     models: [
       { brand: "—", model: "NSG-618TS" },
       { brand: "—", model: "4080NC" },
+      { brand: "Dowell", model: "DSG-3060AND" },
     ],
     photos: [
       { src: "/images/grinder-nsg-618ts.webp", caption: "nsg618ts" },
       { src: "/images/grinder-4080nc.webp", caption: "g4080nc" },
+      { src: "/images/grinder-dsg-3060and.webp", caption: "dsg3060" },
     ],
   },
   {
     id: "press",
-    models: [{ brand: "—", model: "110 t" }],
-    photos: [p("/submainPic/17617894556%E6%B2%96%E5%BA%8A.jpg"), p("/submainPic/17617894557%E6%B2%96%E5%BA%8A2.jpg")],
+    models: [{ brand: "Goanwin", model: "C1N-110", note: "ton110" }],
+    photos: [{ src: "/images/press-c1n-110.webp", caption: "c1n110" }],
   },
   {
     id: "inspection",
     models: [{ brand: "Keyence", model: "VR-6000", note: "profilometer" }],
-    photos: [p("/submainPic/17617321896%E5%9F%BA%E6%81%A9%E6%96%AF.jpg", "keyence")],
+    photos: [{ src: "/images/keyence-vr.webp", caption: "keyence" }],
   },
 ];
 
