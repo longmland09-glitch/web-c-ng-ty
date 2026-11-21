@@ -3,26 +3,20 @@
 import { useEffect, useRef, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 
-type Three = typeof import("three");
+/**
+ * Hero scene: CNC milling of a mould insert. A spindle with an end mill follows
+ * a zig-zag 3D-surface toolpath across the cavity; the cut path is traced in
+ * orange behind the tool and chips fly off at the tip.
+ * Auto-rotate / wireframe / section-view toggles. Static under reduced motion.
+ */
 
-/** Cavity / electrode profile: a connector-style pocket with two locating notches. */
-function profile(THREE: Three, s = 1) {
-  const w = 0.62 * s, h = 0.36 * s, n = 0.14 * s, r = 0.05 * s;
-  const sh = new THREE.Shape();
-  sh.moveTo(-w + r, -h);
-  sh.lineTo(-n, -h);
-  sh.lineTo(-n, -h + n * 0.9);
-  sh.lineTo(n, -h + n * 0.9);
-  sh.lineTo(n, -h);
-  sh.lineTo(w - r, -h);
-  sh.quadraticCurveTo(w, -h, w, -h + r);
-  sh.lineTo(w, h - r);
-  sh.quadraticCurveTo(w, h, w - r, h);
-  sh.lineTo(-w + r, h);
-  sh.quadraticCurveTo(-w, h, -w, h - r);
-  sh.lineTo(-w, -h + r);
-  sh.quadraticCurveTo(-w, -h, -w + r, -h);
-  return sh;
+// mould surface height (world units) at x, z: a pocket with a raised core and a side rib
+function surface(x: number, z: number) {
+  const pocket = Math.max(0, 1 - (x / 0.82) ** 2 - (z / 0.46) ** 2);
+  const core = Math.exp(-((x - 0.18) ** 2 / 0.05 + (z + 0.02) ** 2 / 0.02));
+  const rib = Math.exp(-((x + 0.45) ** 2 / 0.008)) * (Math.abs(z) < 0.3 ? 1 : 0);
+  const ripple = 0.006 * Math.sin(x * 18) * Math.cos(z * 14);
+  return -0.2 * Math.sqrt(pocket) + 0.11 * core + 0.05 * rib * pocket + ripple;
 }
 
 export default function Hero3D({ t }: { t: Dict["hero"] }) {
@@ -57,118 +51,172 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
       const pmrem = new THREE.PMREMGenerator(renderer);
       scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 
-      const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 50);
-      camera.position.set(3.9, 2.9, 4.4);
+      const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 60);
+      camera.position.set(3.4, 2.7, 3.9);
       const controls = new OrbitControls(camera, renderer.domElement);
-      controls.target.set(0, 0.45, 0);
+      controls.target.set(0, 0.55, 0);
       controls.enableDamping = true;
       controls.enableZoom = false;
       controls.enablePan = false;
       controls.minPolarAngle = 0.35;
       controls.maxPolarAngle = 1.45;
       controls.autoRotate = !reduce;
-      controls.autoRotateSpeed = 0.9;
+      controls.autoRotateSpeed = 0.7;
 
       const clip = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
-      const steel = new THREE.MeshStandardMaterial({ color: 0xaeb4ba, metalness: 0.92, roughness: 0.28 });
-      const copper = new THREE.MeshStandardMaterial({ color: 0xc8743c, metalness: 1, roughness: 0.3 });
-      const holder = new THREE.MeshStandardMaterial({ color: 0x5d646b, metalness: 0.85, roughness: 0.4 });
-      const mats = [steel, copper, holder];
-      const edge = new THREE.LineBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.35 });
+      const mat = (color: number, metalness: number, roughness: number) => new THREE.MeshStandardMaterial({ color, metalness, roughness });
+      const steel = mat(0xb4bac0, 0.95, 0.26); // workpiece
+      const tableMat = mat(0x3c4147, 0.7, 0.5);
+      const holder = mat(0xd4d8dc, 1, 0.18); // polished tool holder
+      const body = mat(0x6a7178, 0.8, 0.4); // spindle housing
+      const carbide = mat(0x4a4f55, 0.9, 0.3); // end mill
+      const mats = [steel, tableMat, holder, body, carbide];
+      const edge = new THREE.LineBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.28 });
+      const workMats = [steel]; // section view cuts the workpiece only
 
-      const add = (g: import("three").BufferGeometry, m: import("three").Material, parent: import("three").Object3D) => {
+      const add = (g: import("three").BufferGeometry, m: import("three").Material, parent: import("three").Object3D, edges = true) => {
         const mesh = new THREE.Mesh(g, m);
-        parent.add(mesh, new THREE.LineSegments(new THREE.EdgesGeometry(g, 30), edge));
+        parent.add(mesh);
+        if (edges) mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, 30), edge));
         return mesh;
       };
 
-      // mould insert: solid base + top plate with the cavity
-      const insert = new THREE.Group();
-      const base = new THREE.BoxGeometry(2.4, 0.5, 1.8);
-      base.translate(0, 0.25, 0);
-      add(base, steel, insert);
-      const top = new THREE.Shape();
-      top.moveTo(-1.2, -0.9); top.lineTo(1.2, -0.9); top.lineTo(1.2, 0.9); top.lineTo(-1.2, 0.9); top.closePath();
-      const cav = profile(THREE);
-      top.holes.push(new THREE.Path(cav.getPoints(8).reverse()));
-      // ejector / guide holes
-      for (const [x, z] of [[-0.95, -0.65], [0.95, -0.65], [-0.95, 0.65], [0.95, 0.65]]) {
-        const h = new THREE.Path();
-        h.absarc(x, z, 0.09, 0, Math.PI * 2, true);
-        top.holes.push(h);
+      // ── machine table with T-slots ──
+      const table = new THREE.Group();
+      const top = new THREE.BoxGeometry(3.4, 0.16, 2.2);
+      top.translate(0, 0.08, 0);
+      add(top, tableMat, table);
+      for (const z of [-0.7, 0, 0.7]) {
+        const slot = new THREE.BoxGeometry(3.42, 0.04, 0.12);
+        slot.translate(0, 0.161, z);
+        add(slot, mat(0x1d2024, 0.5, 0.6), table, false);
       }
-      const plate = new THREE.ExtrudeGeometry(top, { depth: 0.32, bevelEnabled: false, curveSegments: 24 });
-      // same rotation as the electrode so the cavity and the electrode profile line up
-      plate.rotateX(-Math.PI / 2);
-      plate.translate(0, 0.5, 0);
-      add(plate, steel, insert);
-      scene.add(insert);
+      scene.add(table);
 
-      // copper electrode with holder
-      const electrode = new THREE.Group();
-      const tip = new THREE.ExtrudeGeometry(profile(THREE, 0.96), { depth: 0.55, bevelEnabled: true, bevelSize: 0.008, bevelThickness: 0.008, bevelSegments: 1 });
-      tip.rotateX(-Math.PI / 2);
-      add(tip, copper, electrode);
-      const shank = new THREE.BoxGeometry(1.0, 0.42, 0.62);
-      shank.translate(0, 0.76, 0);
-      add(shank, holder, electrode);
-      scene.add(electrode);
-
-      // floor: grid + 360° ring
-      const grid = new THREE.GridHelper(6, 24, 0x3a3f45, 0x24282c);
-      (grid.material as InstanceType<Three["Material"]>).transparent = true;
-      (grid.material as InstanceType<Three["Material"]>).opacity = 0.55;
-      scene.add(grid);
-      const ring = new THREE.Mesh(
-        new THREE.RingGeometry(1.75, 1.77, 96),
-        new THREE.MeshBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.55, side: THREE.DoubleSide }),
-      );
-      ring.rotateX(-Math.PI / 2);
-      ring.position.y = 0.002;
-      scene.add(ring);
-
-      // spark light + particles in the gap
-      const sparkLight = new THREE.PointLight(0xff8a1f, 0, 3, 2);
-      scene.add(sparkLight);
-      const key = new THREE.DirectionalLight(0xffffff, 0.9);
-      key.position.set(3, 5, 2);
-      scene.add(key, new THREE.AmbientLight(0x404650, 0.5));
-
-      const N = 220;
-      const pos = new Float32Array(N * 3), vel = new Float32Array(N * 3), life = new Float32Array(N);
-      const geo = new THREE.BufferGeometry();
-      geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-      const sparks = new THREE.Points(
-        geo,
-        new THREE.PointsMaterial({ color: 0xffb35c, size: 0.035, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }),
-      );
-      scene.add(sparks);
-      const cavityFloor = 0.5;
-      const spawn = (i: number, gapY: number) => {
-        pos[i * 3] = (Math.random() - 0.5) * 1.15;
-        pos[i * 3 + 1] = gapY;
-        pos[i * 3 + 2] = (Math.random() - 0.5) * 0.65;
-        const a = Math.random() * Math.PI * 2, sp = 0.6 + Math.random() * 1.6;
-        vel[i * 3] = Math.cos(a) * sp;
-        vel[i * 3 + 1] = 0.8 + Math.random() * 1.8;
-        vel[i * 3 + 2] = Math.sin(a) * sp;
-        life[i] = 0.25 + Math.random() * 0.6;
+      // ── mould insert: block + sculpted top surface ──
+      const SX = 2.0, SZ = 1.3, baseH = 0.5, y0 = 0.16; // block size and table height
+      const work = new THREE.Group();
+      const block = new THREE.BoxGeometry(SX, baseH, SZ);
+      block.translate(0, y0 + baseH / 2, 0);
+      add(block, steel, work);
+      const N = 120;
+      const surf = new THREE.PlaneGeometry(SX, SZ, N, Math.round((N * SZ) / SX));
+      surf.rotateX(-Math.PI / 2);
+      const pos = surf.attributes.position as import("three").BufferAttribute;
+      for (let i = 0; i < pos.count; i++) {
+        const x = pos.getX(i), z = pos.getZ(i);
+        pos.setY(i, y0 + baseH + surface(x, z));
+      }
+      surf.computeVertexNormals();
+      add(surf, steel, work, false);
+      // side skirts so the sculpted top meets the block walls
+      const skirt = (len: number, along: "x" | "z", side: number) => {
+        const n = 80, verts: number[] = [], idx: number[] = [];
+        for (let i = 0; i <= n; i++) {
+          const u = -len / 2 + (len * i) / n;
+          const x = along === "x" ? u : side * (SX / 2);
+          const z = along === "x" ? side * (SZ / 2) : u;
+          verts.push(x, y0 + baseH, z, x, y0 + baseH + surface(x, z), z);
+          if (i < n) idx.push(i * 2, i * 2 + 2, i * 2 + 1, i * 2 + 1, i * 2 + 2, i * 2 + 3);
+        }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
+        g.setIndex(idx);
+        g.computeVertexNormals();
+        const m = new THREE.Mesh(g, steel);
+        work.add(m);
       };
-      for (let i = 0; i < N; i++) life[i] = Math.random() * 0.5;
+      skirt(SX, "x", 1); skirt(SX, "x", -1); skirt(SZ, "z", 1); skirt(SZ, "z", -1);
+      steel.side = THREE.DoubleSide;
+      // clamps
+      for (const s of [-1, 1]) {
+        const c = new THREE.BoxGeometry(0.5, 0.12, 0.22);
+        c.translate(s * (SX / 2 + 0.05), y0 + baseH - 0.02, s * 0.35);
+        add(c, tableMat, work);
+      }
+      scene.add(work);
 
-      let wireOn = false;
+      // ── zig-zag surface toolpath ──
+      const path: number[] = [];
+      const passes = 15, xs = 0.8, zs = 0.48;
+      for (let p = 0; p < passes; p++) {
+        const z = -zs + (2 * zs * p) / (passes - 1);
+        for (let i = 0; i <= 60; i++) {
+          const u = i / 60, x = p % 2 ? xs - 2 * xs * u : -xs + 2 * xs * u;
+          path.push(x, y0 + baseH + surface(x, z) + 0.004, z);
+        }
+      }
+      const pathPts = path.length / 3;
+      const trailGeo = new THREE.BufferGeometry();
+      trailGeo.setAttribute("position", new THREE.Float32BufferAttribute(path, 3));
+      trailGeo.setDrawRange(0, 0);
+      const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.9 }));
+      scene.add(trail);
+
+      // ── spindle with end mill (origin = tool tip) ──
+      const spindle = new THREE.Group();
+      const cyl = (r1: number, r2: number, h: number, y: number, m: import("three").Material, seg = 40) => {
+        const g = new THREE.CylinderGeometry(r1, r2, h, seg);
+        g.translate(0, y + h / 2, 0);
+        return add(g, m, spindle);
+      };
+      const tool = new THREE.Group();
+      spindle.add(tool);
+      const mill = new THREE.CylinderGeometry(0.035, 0.035, 0.42, 20);
+      mill.translate(0, 0.21, 0);
+      tool.add(new THREE.Mesh(mill, carbide));
+      // helical flutes
+      const flutePts: import("three").Vector3[] = [];
+      for (let i = 0; i <= 60; i++) flutePts.push(new THREE.Vector3(Math.cos(i * 0.42) * 0.037, (i / 60) * 0.3, Math.sin(i * 0.42) * 0.037));
+      tool.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(flutePts), new THREE.LineBasicMaterial({ color: 0xd8dde2 })));
+      cyl(0.06, 0.06, 0.06, 0.42, holder); // collet
+      cyl(0.1, 0.07, 0.12, 0.48, holder); // collet nut
+      cyl(0.13, 0.1, 0.22, 0.6, holder); // holder body
+      cyl(0.22, 0.13, 0.16, 0.82, holder); // taper flange
+      const flange = cyl(0.24, 0.24, 0.05, 0.98, body);
+      flange.userData.keep = true;
+      cyl(0.36, 0.36, 1.4, 1.03, body, 48); // spindle housing
+      // coolant nozzles
+      for (const a of [0.6, 2.5]) {
+        const n = new THREE.CylinderGeometry(0.018, 0.022, 0.45, 10);
+        n.translate(0, -0.22, 0);
+        const m = new THREE.Mesh(n, holder);
+        m.position.set(Math.cos(a) * 0.3, 1.05, Math.sin(a) * 0.3);
+        m.rotation.set(Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5);
+        spindle.add(m);
+      }
+      scene.add(spindle);
+
+      // ── lights ──
+      const key = new THREE.DirectionalLight(0xcfe3ff, 1.0);
+      key.position.set(3, 5, 2);
+      const warm = new THREE.PointLight(0xff8a1f, 0, 1.5, 2);
+      scene.add(key, warm, new THREE.AmbientLight(0x3a4250, 0.5));
+
+      // ── chips at the cutting point ──
+      const CN = 160;
+      const cpos = new Float32Array(CN * 3), cvel = new Float32Array(CN * 3), clife = new Float32Array(CN);
+      const chipGeo = new THREE.BufferGeometry();
+      chipGeo.setAttribute("position", new THREE.BufferAttribute(cpos, 3));
+      const chips = new THREE.Points(
+        chipGeo,
+        new THREE.PointsMaterial({ color: 0xffc07a, size: 0.028, transparent: true, opacity: 0.9, depthWrite: false }),
+      );
+      scene.add(chips);
+      for (let i = 0; i < CN; i++) cpos[i * 3 + 1] = -10;
+
+      // ── toggles ──
       const setWire = (on: boolean) => {
-        wireOn = on;
         mats.forEach((m) => (m.wireframe = on));
-        edge.opacity = on ? 0.12 : 0.35;
+        edge.opacity = on ? 0.1 : 0.28;
       };
       const setSection = (on: boolean) => {
-        mats.forEach((m) => {
+        workMats.forEach((m) => {
           m.clippingPlanes = on ? [clip] : [];
-          m.side = on ? THREE.DoubleSide : THREE.FrontSide;
           m.needsUpdate = true;
         });
         edge.clippingPlanes = on ? [clip] : [];
+        trail.material.clippingPlanes = on ? [clip] : [];
       };
 
       const resize = () => {
@@ -182,30 +230,47 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
       resize();
 
       const clock = new THREE.Clock();
-      let raf = 0, visible = true, t = 0;
+      let raf = 0, visible = true, progress = reduce ? pathPts * 0.55 : 0;
+      const tip = new THREE.Vector3();
+      const place = (f: number) => {
+        const i = Math.min(Math.floor(f), pathPts - 2), u = f - i;
+        tip.set(
+          path[i * 3] + (path[i * 3 + 3] - path[i * 3]) * u,
+          path[i * 3 + 1] + (path[i * 3 + 4] - path[i * 3 + 1]) * u,
+          path[i * 3 + 2] + (path[i * 3 + 5] - path[i * 3 + 2]) * u,
+        );
+        spindle.position.copy(tip);
+        trailGeo.setDrawRange(0, i + 1);
+      };
+      place(progress);
+
       const frame = () => {
         const dt = Math.min(clock.getDelta(), 0.05);
-        if (!reduce) t += dt;
-        // servo motion: electrode feeds into the cavity and retracts to flush
-        const feed = reduce ? 0.6 : 0.5 + 0.5 * Math.sin(t * 0.7);
-        const tipY = cavityFloor + 0.02 + (1 - feed) * 0.75;
-        electrode.position.y = tipY;
-        const gap = tipY;
-        const burning = feed > 0.55;
-        sparkLight.position.set(0, gap + 0.05, 0);
-        sparkLight.intensity = burning && !wireOn ? 1.6 + Math.random() * 1.6 : 0;
-        for (let i = 0; i < N; i++) {
-          life[i] -= dt;
-          if (life[i] <= 0) {
-            if (burning && !reduce) spawn(i, gap);
-            else { pos[i * 3 + 1] = -10; continue; }
+        if (!reduce) {
+          progress += dt * 38;
+          if (progress >= pathPts - 1) progress = 0;
+          place(progress);
+          tool.rotation.y += dt * 40;
+          warm.position.copy(tip).add(new THREE.Vector3(0, 0.06, 0));
+          warm.intensity = 0.8 + Math.random() * 0.6;
+          for (let i = 0; i < CN; i++) {
+            clife[i] -= dt;
+            if (clife[i] <= 0) {
+              if (Math.random() < 0.35) {
+                const a = Math.random() * Math.PI * 2, sp = 0.5 + Math.random() * 1.4;
+                cpos.set([tip.x, tip.y + 0.02, tip.z], i * 3);
+                cvel.set([Math.cos(a) * sp, 0.6 + Math.random() * 1.3, Math.sin(a) * sp], i * 3);
+                clife[i] = 0.3 + Math.random() * 0.5;
+              } else cpos[i * 3 + 1] = -10;
+              continue;
+            }
+            cvel[i * 3 + 1] -= 5 * dt;
+            cpos[i * 3] += cvel[i * 3] * dt;
+            cpos[i * 3 + 1] += cvel[i * 3 + 1] * dt;
+            cpos[i * 3 + 2] += cvel[i * 3 + 2] * dt;
           }
-          vel[i * 3 + 1] -= 6 * dt;
-          pos[i * 3] += vel[i * 3] * dt;
-          pos[i * 3 + 1] += vel[i * 3 + 1] * dt;
-          pos[i * 3 + 2] += vel[i * 3 + 2] * dt;
+          chipGeo.attributes.position.needsUpdate = true;
         }
-        geo.attributes.position.needsUpdate = true;
         controls.update();
         renderer.render(scene, camera);
         raf = visible && !document.hidden ? requestAnimationFrame(frame) : 0;
@@ -238,10 +303,7 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
         io.disconnect();
         ro.disconnect();
         document.removeEventListener("visibilitychange", onVis);
-        scene.traverse((o) => {
-          const m = o as unknown as { geometry?: { dispose(): void } };
-          m.geometry?.dispose();
-        });
+        scene.traverse((o) => (o as unknown as { geometry?: { dispose(): void } }).geometry?.dispose());
         [...mats, edge].forEach((m) => m.dispose());
         pmrem.dispose();
         controls.dispose();
