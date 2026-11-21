@@ -18,7 +18,8 @@ npm run dev
 2. **Cổng báo giá (RFQ)**: kéo thả STEP / IGES / DXF / DWG / PDF / X_T / ZIP, chọn vật liệu, số lượng, dung sai, độ nhám (`src/components/RfqForm.tsx`, API `src/app/api/rfq/route.ts`).
 3. **Bảng máy móc & đo kiểm**: dữ liệu trong `src/lib/data.ts` → `machines`.
 4. **Dự án theo ngành**: dữ liệu trong `src/lib/data.ts` → `products`, lọc theo ngành, xem ảnh dạng lightbox.
-5. **Đa ngôn ngữ & SEO**: nội dung trong `src/lib/i18n.ts`, hreflang, sitemap, dữ liệu có cấu trúc (JSON-LD).
+5. **Thiết kế & mô hình 3D**: mục `#design3d` (`src/components/Design3D.tsx`) gồm đế Deflux (dựng theo bản vẽ), đồ gá IC/SMT, tấm hút chân không 12 vị trí, vòng đồng xẻ rãnh, hộp magazine (`src/components/xmModels.ts`, dựng theo ảnh sản phẩm, kích thước tham khảo) và máy MV1200S. Nội dung từng mô hình nằm trong `src/lib/i18n.ts` → `design.items`.
+6. **Đa ngôn ngữ & SEO**: nội dung trong `src/lib/i18n.ts`, hreflang, sitemap, dữ liệu có cấu trúc (JSON-LD).
 
 ## Bật chức năng nhận bản vẽ qua email
 

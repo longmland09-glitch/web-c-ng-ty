@@ -33,6 +33,7 @@ export default function Header({ locale, t }: { locale: Locale; t: Dict }) {
     ["#rfq", t.nav.rfq],
     ["#machinery", t.nav.machinery],
     ["#cases", t.nav.cases],
+    ["#design3d", t.nav.design],
     ["#about", t.nav.about],
     ["#contact", t.nav.contact],
   ] as const;

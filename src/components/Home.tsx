@@ -2,6 +2,7 @@ import type { Locale } from "@/lib/i18n";
 import { dictionaries } from "@/lib/i18n";
 import { banners, company, history, machines } from "@/lib/data";
 import Cases from "./Cases";
+import Design3D from "./Design3D";
 import Footer from "./Footer";
 import Header from "./Header";
 import Hero3D from "./Hero3D";
@@ -134,6 +135,18 @@ export default function Home({ locale }: { locale: Locale }) {
               <p>{t.cases.intro}</p>
             </header>
             <Cases t={t.cases} captions={t.captions} />
+          </div>
+        </section>
+
+        {/* ───── 3D design ───── */}
+        <section id="design3d" className="section design-section" aria-labelledby="d3-title">
+          <div className="wrap">
+            <header className="sec-head">
+              <p className="eyebrow">{t.design.label}</p>
+              <h2 id="d3-title">{t.design.title}</h2>
+              <p>{t.design.intro}</p>
+            </header>
+            <Design3D t={t.design} />
           </div>
         </section>
 
