@@ -73,6 +73,7 @@ export const products: ProductData[] = [
       { src: "/images/vacuum-plate-12.webp", caption: "vacuumPlate12", position: "center 30%" },
       { src: "/images/vacuum-plate-2.webp", caption: "vacuumPlate2", position: "center 40%" },
       { src: "/images/vacuum-base.webp", caption: "vacuumBase", position: "center 40%" },
+      { src: "/images/vacuum-base-real.webp", caption: "vacuumBaseReal" },
       { src: "/images/vacuum-nozzle.webp", caption: "vacuumNozzle", position: "center 40%" },
     ],
   },
@@ -158,8 +159,12 @@ export const machines: MachineData[] = [
   {
     id: "milling",
     units: 27,
-    models: [{ brand: "—", model: "4-axis", travel: "1800 × 800 × 700" }],
+    models: [
+      { brand: "—", model: "e-750A", note: "vmc" },
+      { brand: "—", model: "4-axis", travel: "1800 × 800 × 700" },
+    ],
     photos: [
+      { src: "/images/e-750a.webp", caption: "e750a" },
       p("/submainPic/17617317756e-1800.png"),
       p("/submainPic/17617882687260743.jpg"),
       p("/submainPic/17617882688260756.jpg"),

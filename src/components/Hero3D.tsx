@@ -4,20 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import type { Dict } from "@/lib/i18n";
 
 /**
- * Hero scene: CNC milling of a mould insert. A spindle with an end mill follows
- * a zig-zag 3D-surface toolpath across the cavity; the cut path is traced in
- * orange behind the tool and chips fly off at the tip.
- * Auto-rotate / wireframe / section-view toggles. Static under reduced motion.
+ * Hero scene: inside the company's e-750A vertical machining centre.
+ * The head moves in Z only; the table carries the part in X/Y, as on the real
+ * machine. The part is the company's vacuum base (two-tier plate, notched boss,
+ * front recess, X suction groove): a facing pass, then the X groove and centre hole.
+ * Sparks, glow, cut trail. Auto-rotate / wireframe / section toggles.
  */
 
-// mould surface height (world units) at x, z: a pocket with a raised core and a side rib
-function surface(x: number, z: number) {
-  const pocket = Math.max(0, 1 - (x / 0.82) ** 2 - (z / 0.46) ** 2);
-  const core = Math.exp(-((x - 0.18) ** 2 / 0.05 + (z + 0.02) ** 2 / 0.02));
-  const rib = Math.exp(-((x + 0.45) ** 2 / 0.008)) * (Math.abs(z) < 0.3 ? 1 : 0);
-  const ripple = 0.006 * Math.sin(x * 18) * Math.cos(z * 14);
-  return -0.2 * Math.sqrt(pocket) + 0.11 * core + 0.05 * rib * pocket + ripple;
-}
+type Pt = { x: number; y: number; z: number; cut: boolean };
 
 export default function Hero3D({ t }: { t: Dict["hero"] }) {
   const host = useRef<HTMLDivElement>(null);
@@ -38,6 +32,9 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
       const { OrbitControls } = await import("three/examples/jsm/controls/OrbitControls.js");
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js");
       if (disposed) return;
+      type O3 = import("three").Object3D;
+      type Mt = import("three").Material;
+      type G = import("three").BufferGeometry;
 
       const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
@@ -50,170 +47,244 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
       const scene = new THREE.Scene();
       const pmrem = new THREE.PMREMGenerator(renderer);
       scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+      scene.environmentIntensity = 0.75;
 
-      const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 60);
-      camera.position.set(3.4, 2.7, 3.9);
+      const camera = new THREE.PerspectiveCamera(34, 1, 0.1, 60);
+      camera.position.set(3.6, 3.0, 4.3);
       const controls = new OrbitControls(camera, renderer.domElement);
-      controls.target.set(0, 0.55, 0);
+      controls.target.set(0, 0.95, 0);
       controls.enableDamping = true;
       controls.enableZoom = false;
       controls.enablePan = false;
-      controls.minPolarAngle = 0.35;
-      controls.maxPolarAngle = 1.45;
+      controls.minPolarAngle = 0.4;
+      controls.maxPolarAngle = 1.4;
       controls.autoRotate = !reduce;
-      controls.autoRotateSpeed = 0.7;
+      controls.autoRotateSpeed = 0.6;
 
-      const clip = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
+      const textures: import("three").Texture[] = [];
       const mat = (color: number, metalness: number, roughness: number) => new THREE.MeshStandardMaterial({ color, metalness, roughness });
-      const steel = mat(0xb4bac0, 0.95, 0.26); // workpiece
-      const tableMat = mat(0x3c4147, 0.7, 0.5);
-      const holder = mat(0xd4d8dc, 1, 0.18); // polished tool holder
-      const body = mat(0x6a7178, 0.8, 0.4); // spindle housing
-      const carbide = mat(0x4a4f55, 0.9, 0.3); // end mill
-      const mats = [steel, tableMat, holder, body, carbide];
-      const edge = new THREE.LineBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.28 });
-      const workMats = [steel]; // section view cuts the workpiece only
+      const part = mat(0x5d6268, 0.85, 0.35); // dark ground steel, like the photo
+      const groove = mat(0x26292d, 0.6, 0.6);
+      const tableMat = mat(0x4a4f55, 0.75, 0.45);
+      const slotMat = mat(0x1d2024, 0.5, 0.6);
+      const white = mat(0xe8e9e8, 0.1, 0.45); // machine covers (head)
+      const greyCov = mat(0xb9bcbf, 0.2, 0.5);
+      const wall = mat(0x2a2d31, 0.3, 0.7); // dim cabin walls so the cut is the focus
+      const wallSide = mat(0x34383c, 0.3, 0.7);
+      const dark = mat(0x2e3236, 0.4, 0.55);
+      const holder = mat(0xd4d8dc, 1, 0.18);
+      const carbide = mat(0x4a4f55, 0.9, 0.3);
+      const mats = [part, groove, tableMat, slotMat, white, greyCov, wall, wallSide, dark, holder, carbide];
+      const edge = new THREE.LineBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.25 });
 
-      const add = (g: import("three").BufferGeometry, m: import("three").Material, parent: import("three").Object3D, edges = true) => {
+      const add = (g: G, m: Mt, parent: O3, edges = true) => {
         const mesh = new THREE.Mesh(g, m);
         parent.add(mesh);
         if (edges) mesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, 30), edge));
         return mesh;
       };
-
-      // ── machine table with T-slots ──
-      const table = new THREE.Group();
-      const top = new THREE.BoxGeometry(3.4, 0.16, 2.2);
-      top.translate(0, 0.08, 0);
-      add(top, tableMat, table);
-      for (const z of [-0.7, 0, 0.7]) {
-        const slot = new THREE.BoxGeometry(3.42, 0.04, 0.12);
-        slot.translate(0, 0.161, z);
-        add(slot, mat(0x1d2024, 0.5, 0.6), table, false);
-      }
-      scene.add(table);
-
-      // ── mould insert: block + sculpted top surface ──
-      const SX = 2.0, SZ = 1.3, baseH = 0.5, y0 = 0.16; // block size and table height
-      const work = new THREE.Group();
-      const block = new THREE.BoxGeometry(SX, baseH, SZ);
-      block.translate(0, y0 + baseH / 2, 0);
-      add(block, steel, work);
-      const N = 120;
-      const surf = new THREE.PlaneGeometry(SX, SZ, N, Math.round((N * SZ) / SX));
-      surf.rotateX(-Math.PI / 2);
-      const pos = surf.attributes.position as import("three").BufferAttribute;
-      for (let i = 0; i < pos.count; i++) {
-        const x = pos.getX(i), z = pos.getZ(i);
-        pos.setY(i, y0 + baseH + surface(x, z));
-      }
-      surf.computeVertexNormals();
-      add(surf, steel, work, false);
-      // side skirts so the sculpted top meets the block walls
-      const skirt = (len: number, along: "x" | "z", side: number) => {
-        const n = 80, verts: number[] = [], idx: number[] = [];
-        for (let i = 0; i <= n; i++) {
-          const u = -len / 2 + (len * i) / n;
-          const x = along === "x" ? u : side * (SX / 2);
-          const z = along === "x" ? side * (SZ / 2) : u;
-          verts.push(x, y0 + baseH, z, x, y0 + baseH + surface(x, z), z);
-          if (i < n) idx.push(i * 2, i * 2 + 2, i * 2 + 1, i * 2 + 1, i * 2 + 2, i * 2 + 3);
-        }
-        const g = new THREE.BufferGeometry();
-        g.setAttribute("position", new THREE.Float32BufferAttribute(verts, 3));
-        g.setIndex(idx);
-        g.computeVertexNormals();
-        const m = new THREE.Mesh(g, steel);
-        work.add(m);
+      const boxAt = (w: number, h: number, d: number, x: number, y: number, z: number, m: Mt, parent: O3, edges = true) => {
+        const g = new THREE.BoxGeometry(w, h, d);
+        g.translate(x, y, z);
+        return add(g, m, parent, edges);
       };
-      skirt(SX, "x", 1); skirt(SX, "x", -1); skirt(SZ, "z", 1); skirt(SZ, "z", -1);
-      steel.side = THREE.DoubleSide;
-      // clamps
-      for (const s of [-1, 1]) {
-        const c = new THREE.BoxGeometry(0.5, 0.12, 0.22);
-        c.translate(s * (SX / 2 + 0.05), y0 + baseH - 0.02, s * 0.35);
-        add(c, tableMat, work);
-      }
-      scene.add(work);
+      const label = (text: string, w: number, h: number, color: string, font: string) => {
+        const c = document.createElement("canvas");
+        c.width = 512;
+        c.height = Math.round((512 * h) / w);
+        const g = c.getContext("2d")!;
+        g.fillStyle = color;
+        g.font = font;
+        g.textBaseline = "middle";
+        g.fillText(text, 16, c.height / 2);
+        const tex = new THREE.CanvasTexture(c);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        textures.push(tex);
+        const m = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false });
+        mats.push(m as unknown as import("three").MeshStandardMaterial);
+        return new THREE.Mesh(new THREE.PlaneGeometry(w, h), m);
+      };
 
-      // ── zig-zag surface toolpath ──
-      const path: number[] = [];
-      const passes = 15, xs = 0.8, zs = 0.48;
-      for (let p = 0; p < passes; p++) {
-        const z = -zs + (2 * zs * p) / (passes - 1);
-        for (let i = 0; i <= 60; i++) {
-          const u = i / 60, x = p % 2 ? xs - 2 * xs * u : -xs + 2 * xs * u;
-          path.push(x, y0 + baseH + surface(x, z) + 0.004, z);
+      // ── machine enclosure (fixed): back wall with window, side walls, floor tray ──
+      const cabin = new THREE.Group();
+      boxAt(4.2, 3.2, 0.06, 0, 1.4, -1.55, wall, cabin, false);
+      boxAt(0.06, 3.2, 3.2, -2.1, 1.4, 0.05, wallSide, cabin, false);
+      boxAt(4.2, 0.12, 3.2, 0, -0.24, 0.05, dark, cabin);
+      const win = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.2, 1.0),
+        new THREE.MeshStandardMaterial({ color: 0x1a2a38, metalness: 0.3, roughness: 0.1, transparent: true, opacity: 0.85 }),
+      );
+      win.rotation.y = Math.PI / 2;
+      win.position.set(-2.06, 1.55, 0.2);
+      cabin.add(win);
+      boxAt(0.04, 1.1, 1.3, -2.07, 1.55, 0.2, dark, cabin, false);
+      // telescopic way covers under the table
+      for (let i = 0; i < 5; i++) boxAt(3.6 - i * 0.12, 0.05, 0.42, 0, -0.14 + i * 0.012, -1.0 + i * 0.03, dark, cabin, false);
+      scene.add(cabin);
+
+      // ── moving table (X/Y) with T-slots, carrying the part ──
+      const carriage = new THREE.Group();
+      boxAt(3.0, 0.2, 1.9, 0, 0.0, 0, tableMat, carriage);
+      for (const z of [-0.6, 0, 0.6]) boxAt(3.02, 0.04, 0.12, 0, 0.081, z, slotMat, carriage, false);
+      scene.add(carriage);
+
+      // part: the vacuum base from the product photo (units ≈ 0.01 m)
+      const work = new THREE.Group();
+      carriage.add(work);
+      const BY = 0.1; // table top
+      const baseW = 1.7, baseH = 0.2, bossW = 1.36, bossH = 0.26, notch = 0.2, recessW = 0.86, recessD = 0.12;
+      const TOP = BY + baseH + bossH;
+      // base plate with two half-round notches on the front edge
+      {
+        const s = new THREE.Shape();
+        s.moveTo(-baseW / 2, -baseW / 2);
+        s.lineTo(-0.28, -baseW / 2);
+        s.absarc(-0.18, -baseW / 2, 0.1, Math.PI, 0, true);
+        s.lineTo(0.08, -baseW / 2);
+        s.absarc(0.18, -baseW / 2, 0.1, Math.PI, 0, true);
+        s.lineTo(baseW / 2, -baseW / 2);
+        s.lineTo(baseW / 2, baseW / 2);
+        s.lineTo(-baseW / 2, baseW / 2);
+        s.closePath();
+        const g = new THREE.ExtrudeGeometry(s, { depth: baseH, bevelEnabled: true, bevelSize: 0.01, bevelThickness: 0.01, bevelSegments: 1, curveSegments: 16 });
+        // rotateX(-90°): shape y → −z (front faces the camera), extrusion → +y
+        g.rotateX(-Math.PI / 2);
+        g.translate(0, BY, 0);
+        add(g, part, work);
+        // counterbored holes on the front face
+        for (const x of [-0.18, 0.18]) {
+          const h = new THREE.CylinderGeometry(0.035, 0.035, 0.02, 20);
+          h.rotateX(Math.PI / 2);
+          h.translate(x, BY + baseH * 0.55, baseW / 2 + 0.002);
+          add(h, groove, work, false);
         }
       }
-      const pathPts = path.length / 3;
-      const trailGeo = new THREE.BufferGeometry();
-      trailGeo.setAttribute("position", new THREE.Float32BufferAttribute(path, 3));
-      trailGeo.setDrawRange(0, 0);
-      const trail = new THREE.Line(trailGeo, new THREE.LineBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.9 }));
-      scene.add(trail);
+      // boss: square with notched corners and a recess in the front face
+      {
+        const a = bossW / 2, n = notch, r = recessW / 2;
+        const pts: [number, number][] = [
+          [-a + n, -a], [-r, -a], [-r, -a + recessD], [r, -a + recessD], [r, -a], [a - n, -a], [a - n, -a + n * 0.55], [a, -a + n * 0.55],
+          [a, a - n * 0.55], [a - n, a - n * 0.55], [a - n, a], [-a + n, a], [-a + n, a - n * 0.55], [-a, a - n * 0.55],
+          [-a, -a + n * 0.55], [-a + n, -a + n * 0.55],
+        ];
+        // shape is drawn in XY with y = -z so the recess faces the camera (+Z)
+        const s = new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y)));
+        const g = new THREE.ExtrudeGeometry(s, { depth: bossH, bevelEnabled: true, bevelSize: 0.008, bevelThickness: 0.008, bevelSegments: 1 });
+        g.rotateX(-Math.PI / 2);
+        g.translate(0, BY + baseH, 0);
+        add(g, part, work);
+        // side hole in the recess
+        const h = new THREE.CylinderGeometry(0.045, 0.045, 0.02, 24);
+        h.rotateX(Math.PI / 2);
+        h.translate(0, BY + baseH + bossH * 0.5, a - recessD + 0.002);
+        add(h, groove, work, false);
+      }
+      scene.add(carriage);
 
-      // ── spindle with end mill (origin = tool tip) ──
-      const spindle = new THREE.Group();
+      // X groove + centre hole: revealed as the tool cuts them
+      const grooveArms: import("three").Mesh[] = [];
+      for (let i = 0; i < 4; i++) {
+        const ang = Math.PI / 4 + (i * Math.PI) / 2;
+        const g = new THREE.BoxGeometry(0.5, 0.008, 0.065);
+        g.translate(0.25, 0, 0);
+        const m = new THREE.Mesh(g, groove);
+        m.position.set(0, TOP + 0.004, 0);
+        m.rotation.y = -ang;
+        m.scale.x = 0.0001;
+        work.add(m);
+        grooveArms.push(m);
+      }
+      const hole = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.01, 6), groove);
+      hole.position.set(0, TOP + 0.005, 0);
+      hole.scale.setScalar(0.0001);
+      work.add(hole);
+
+      // ── toolpath (part coordinates): facing raster, then the X groove ──
+      const path: Pt[] = [];
+      const up = 0.3;
+      const go = (x: number, z: number, cut: boolean, y = TOP) => path.push({ x, y: cut ? y : y + up, z, cut });
+      const lim = 0.56;
+      for (let p = 0; p < 7; p++) {
+        const z = -lim + (2 * lim * p) / 6, xa = p % 2 ? lim : -lim, xb = -xa;
+        go(xa, z, false);
+        go(xa, z, true);
+        go(xb, z, true);
+        go(xb, z, false);
+      }
+      for (let i = 0; i < 4; i++) {
+        const ang = Math.PI / 4 + (i * Math.PI) / 2, ex = Math.cos(ang) * 0.5, ez = Math.sin(ang) * 0.5;
+        go(0, 0, false);
+        go(0, 0, true, TOP - 0.01);
+        go(ex, ez, true, TOP - 0.01);
+        go(ex, ez, false);
+      }
+      go(0, 0, false);
+      const segLen: number[] = [];
+      let total = 0;
+      for (let i = 0; i < path.length - 1; i++) {
+        const a = path[i], b = path[i + 1];
+        const l = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
+        segLen.push(l);
+        total += l;
+      }
+      // cut trail (orange), in part coordinates so it rides on the table
+      const trailPos = new Float32Array((path.length - 1) * 6);
+      const trailGeo = new THREE.BufferGeometry();
+      trailGeo.setAttribute("position", new THREE.BufferAttribute(trailPos, 3));
+      trailGeo.setDrawRange(0, 0);
+      const trailMat = new THREE.LineBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.9 });
+      const trail = new THREE.LineSegments(trailGeo, trailMat);
+      work.add(trail);
+
+      // ── head (Z only): e-750A head casing, spindle nose, holder, end mill ──
+      const head = new THREE.Group();
       const tool = new THREE.Group();
-      spindle.add(tool);
-      const cyl = (r1: number, r2: number, h: number, y: number, m: import("three").Material, seg = 40, parent: import("three").Object3D = spindle) => {
+      head.add(tool);
+      const cyl = (r1: number, r2: number, h: number, y: number, m: Mt, seg: number, parent: O3) => {
         const g = new THREE.CylinderGeometry(r1, r2, h, seg);
         g.translate(0, y + h / 2, 0);
         return add(g, m, parent);
       };
-      const mill = new THREE.CylinderGeometry(0.035, 0.035, 0.42, 20);
-      mill.translate(0, 0.21, 0);
+      const mill = new THREE.CylinderGeometry(0.03, 0.03, 0.36, 20);
+      mill.translate(0, 0.18, 0);
       tool.add(new THREE.Mesh(mill, carbide));
-      // helical flutes
       const flutePts: import("three").Vector3[] = [];
-      for (let i = 0; i <= 60; i++) flutePts.push(new THREE.Vector3(Math.cos(i * 0.42) * 0.037, (i / 60) * 0.3, Math.sin(i * 0.42) * 0.037));
+      for (let i = 0; i <= 60; i++) flutePts.push(new THREE.Vector3(Math.cos(i * 0.42) * 0.032, (i / 60) * 0.26, Math.sin(i * 0.42) * 0.032));
       tool.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(flutePts), new THREE.LineBasicMaterial({ color: 0xd8dde2 })));
-      cyl(0.06, 0.06, 0.06, 0.42, holder, 40, tool); // collet
-      cyl(0.1, 0.07, 0.12, 0.48, holder, 8, tool); // collet nut (faceted, so the spin shows)
-      cyl(0.13, 0.1, 0.22, 0.6, holder, 40, tool); // holder body
-      cyl(0.22, 0.13, 0.16, 0.82, holder, 12, tool); // taper flange
-      const flange = cyl(0.24, 0.24, 0.05, 0.98, body);
-      flange.userData.keep = true;
-      cyl(0.36, 0.36, 1.4, 1.03, body, 48); // spindle housing
+      cyl(0.055, 0.055, 0.05, 0.36, holder, 40, tool);
+      cyl(0.09, 0.065, 0.11, 0.41, holder, 8, tool);
+      cyl(0.12, 0.09, 0.2, 0.52, holder, 40, tool);
+      cyl(0.2, 0.12, 0.14, 0.72, holder, 12, tool);
+      cyl(0.26, 0.26, 0.2, 0.86, dark, 40, head); // spindle nose
+      // head casing: light grey with white cover, like the e-750A
+      boxAt(1.0, 1.3, 1.0, 0, 1.06 + 0.65, -0.1, greyCov, head);
+      boxAt(1.04, 0.5, 1.04, 0, 1.06 + 1.3 + 0.25, -0.1, white, head);
+      boxAt(0.12, 1.8, 0.6, 0.56, 1.06 + 0.9, -0.3, dark, head, false); // Z-axis way cover
+      const plate = label("e-750A", 0.5, 0.12, "#3a3f45", "italic 700 66px Arial, sans-serif");
+      plate.position.set(-0.12, 1.06 + 0.2, 0.402);
+      head.add(plate);
+      const stripe = label("", 1.0, 0.02, "#ff8a1f", "10px Arial");
+      (stripe.material as import("three").MeshBasicMaterial).map = null;
+      (stripe.material as import("three").MeshBasicMaterial).color.set(0xff8a1f);
+      (stripe.material as import("three").MeshBasicMaterial).transparent = false;
+      stripe.position.set(0, 1.06 + 0.36, 0.402);
+      head.add(stripe);
       // coolant nozzles
-      for (const a of [0.6, 2.5]) {
-        const n = new THREE.CylinderGeometry(0.018, 0.022, 0.45, 10);
-        n.translate(0, -0.22, 0);
+      for (const a of [0.7, 2.4]) {
+        const n = new THREE.CylinderGeometry(0.016, 0.02, 0.42, 10);
+        n.translate(0, -0.21, 0);
         const m = new THREE.Mesh(n, holder);
-        m.position.set(Math.cos(a) * 0.3, 1.05, Math.sin(a) * 0.3);
+        m.position.set(Math.cos(a) * 0.24, 0.92, Math.sin(a) * 0.24);
         m.rotation.set(Math.sin(a) * 0.5, 0, -Math.cos(a) * 0.5);
-        spindle.add(m);
+        head.add(m);
       }
-      scene.add(spindle);
+      scene.add(head);
 
-      // ── lights ──
-      const key = new THREE.DirectionalLight(0xcfe3ff, 1.0);
-      key.position.set(3, 5, 2);
-      const warm = new THREE.PointLight(0xff8a1f, 0, 1.5, 2);
-      scene.add(key, warm, new THREE.AmbientLight(0x3a4250, 0.5));
-
-      // ── chips at the cutting point ──
-      const CN = 320;
-      const cpos = new Float32Array(CN * 3), cvel = new Float32Array(CN * 3), clife = new Float32Array(CN);
-      const chipGeo = new THREE.BufferGeometry();
-      chipGeo.setAttribute("position", new THREE.BufferAttribute(cpos, 3));
-      const chips = new THREE.Points(
-        chipGeo,
-        new THREE.PointsMaterial({ color: 0xffb35c, size: 0.04, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false }),
-      );
-      scene.add(chips);
-      for (let i = 0; i < CN; i++) cpos[i * 3 + 1] = -10;
-      // streaks: a short line from each spark back along its velocity
-      const spos = new Float32Array(CN * 6);
-      const streakGeo = new THREE.BufferGeometry();
-      streakGeo.setAttribute("position", new THREE.BufferAttribute(spos, 3));
-      const streaks = new THREE.LineSegments(
-        streakGeo,
-        new THREE.LineBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false }),
-      );
-      scene.add(streaks);
-      // glow sprite at the cutting point
+      // ── lights, glow, sparks ──
+      const key = new THREE.DirectionalLight(0xdfeaff, 1.0);
+      key.position.set(3, 5, 3);
+      const warm = new THREE.PointLight(0xff8a1f, 0, 1.4, 2);
+      scene.add(key, warm, new THREE.AmbientLight(0x3a4250, 0.55));
       const glowTex = (() => {
         const c = document.createElement("canvas");
         c.width = c.height = 64;
@@ -224,24 +295,43 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
         r.addColorStop(1, "rgba(255,120,20,0)");
         g.fillStyle = r;
         g.fillRect(0, 0, 64, 64);
-        return new THREE.CanvasTexture(c);
+        const tex = new THREE.CanvasTexture(c);
+        textures.push(tex);
+        return tex;
       })();
       const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, blending: THREE.AdditiveBlending, depthWrite: false, transparent: true }));
-      glow.scale.setScalar(0.3);
       scene.add(glow);
 
+      const CN = 320;
+      const cpos = new Float32Array(CN * 3), cvel = new Float32Array(CN * 3), clife = new Float32Array(CN), spos = new Float32Array(CN * 6);
+      for (let i = 0; i < CN; i++) cpos[i * 3 + 1] = -10;
+      spos.fill(-10);
+      const chipGeo = new THREE.BufferGeometry();
+      chipGeo.setAttribute("position", new THREE.BufferAttribute(cpos, 3));
+      scene.add(new THREE.Points(chipGeo, new THREE.PointsMaterial({ color: 0xffb35c, size: 0.04, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false })));
+      const streakGeo = new THREE.BufferGeometry();
+      streakGeo.setAttribute("position", new THREE.BufferAttribute(spos, 3));
+      scene.add(
+        new THREE.LineSegments(
+          streakGeo,
+          new THREE.LineBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.75, blending: THREE.AdditiveBlending, depthWrite: false }),
+        ),
+      );
+
       // ── toggles ──
+      const clip = new THREE.Plane(new THREE.Vector3(-1, 0, 0), 0);
       const setWire = (on: boolean) => {
-        mats.forEach((m) => (m.wireframe = on));
-        edge.opacity = on ? 0.1 : 0.28;
+        mats.forEach((m) => "wireframe" in m && (m.wireframe = on));
+        edge.opacity = on ? 0.1 : 0.25;
       };
       const setSection = (on: boolean) => {
-        workMats.forEach((m) => {
+        [part, groove].forEach((m) => {
           m.clippingPlanes = on ? [clip] : [];
+          m.side = on ? THREE.DoubleSide : THREE.FrontSide;
           m.needsUpdate = true;
         });
         edge.clippingPlanes = on ? [clip] : [];
-        trail.material.clippingPlanes = on ? [clip] : [];
+        trailMat.clippingPlanes = on ? [clip] : [];
       };
 
       const resize = () => {
@@ -254,38 +344,55 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
       ro.observe(el);
       resize();
 
-      const clock = new THREE.Clock();
-      let raf = 0, visible = true, cutting = true, progress = reduce ? pathPts * 0.55 : 0;
+      // ── motion ──
+      let dist = reduce ? total * 0.985 : 0, cutting = false;
       const tip = new THREE.Vector3();
-      const place = (f: number) => {
-        const i = Math.min(Math.floor(f), pathPts - 2), u = f - i;
-        tip.set(
-          path[i * 3] + (path[i * 3 + 3] - path[i * 3]) * u,
-          path[i * 3 + 1] + (path[i * 3 + 4] - path[i * 3 + 1]) * u,
-          path[i * 3 + 2] + (path[i * 3 + 5] - path[i * 3 + 2]) * u,
-        );
-        // lift between passes: retract near the end of a pass, plunge at the start of the next
-        const k = (f % 61) / 61;
-        const lift = k < 0.06 ? (0.06 - k) / 0.06 : k > 0.94 ? (k - 0.94) / 0.06 : 0;
-        spindle.position.copy(tip);
-        spindle.position.y += 0.28 * lift * lift;
-        cutting = lift < 0.05;
-        trailGeo.setDrawRange(0, i + 1);
+      const place = (d: number) => {
+        let i = 0, acc = 0;
+        while (i < segLen.length - 1 && acc + segLen[i] < d) acc += segLen[i++];
+        const u = segLen[i] ? Math.min(1, (d - acc) / segLen[i]) : 0;
+        const a = path[i], b = path[i + 1];
+        const x = a.x + (b.x - a.x) * u, y = a.y + (b.y - a.y) * u, z = a.z + (b.z - a.z) * u;
+        cutting = a.cut && b.cut;
+        // table moves the part under the fixed spindle axis; the head moves only in Z (here: y)
+        carriage.position.set(-x, 0, -z);
+        head.position.y = y;
+        tip.set(0, y, 0);
+        // trail up to the current point, cut segments only
+        let n = 0;
+        for (let k = 0; k <= i; k++) {
+          const p = path[k], q = k === i ? { x, y, z, cut: cutting } : path[k + 1];
+          if (!(p.cut && q.cut)) continue;
+          trailPos.set([p.x, p.y + 0.004, p.z, q.x, q.y + 0.004, q.z], n * 6);
+          n++;
+        }
+        trailGeo.setDrawRange(0, n * 2);
+        trailGeo.attributes.position.needsUpdate = true;
+        // reveal the X groove and centre hole as they are cut
+        const grooveStart = 7 * 4;
+        grooveArms.forEach((arm, k) => {
+          const s = grooveStart + k * 4 + 1;
+          const f = i > s + 1 ? 1 : i === s + 1 ? u : 0;
+          arm.scale.x = Math.max(0.0001, f);
+        });
+        hole.scale.setScalar(i >= grooveStart + 1 ? 1 : 0.0001);
       };
-      place(progress);
+      place(dist);
 
+      const clock = new THREE.Clock();
+      let raf = 0, visible = true;
       const frame = () => {
         const dt = Math.min(clock.getDelta(), 0.05);
         if (!reduce) {
-          progress += dt * 34;
-          if (progress >= pathPts - 1) progress = 0;
-          place(progress);
+          dist += dt * 0.9;
+          if (dist >= total) dist = 0;
+          place(dist);
           tool.rotation.y += dt * 40;
           const flick = cutting ? 0.7 + Math.random() * 0.6 : 0;
           warm.position.copy(tip).add(new THREE.Vector3(0, 0.06, 0));
           warm.intensity = 2.2 * flick;
           glow.position.copy(tip).add(new THREE.Vector3(0, 0.03, 0));
-          glow.scale.setScalar(0.18 + 0.22 * flick);
+          glow.scale.setScalar(0.16 + 0.2 * flick);
           glow.material.opacity = flick;
           for (let i = 0; i < CN; i++) {
             clife[i] -= dt;
@@ -305,9 +412,11 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
             cpos[i * 3] += cvel[i * 3] * dt;
             cpos[i * 3 + 1] += cvel[i * 3 + 1] * dt;
             cpos[i * 3 + 2] += cvel[i * 3 + 2] * dt;
-            // bounce off the workpiece top
-            if (cpos[i * 3 + 1] < y0 + baseH - 0.15 && Math.abs(cpos[i * 3]) < SX / 2 && Math.abs(cpos[i * 3 + 2]) < SZ / 2) {
-              cpos[i * 3 + 1] = y0 + baseH - 0.15;
+            // bounce on the part top or the table
+            const px = cpos[i * 3] - carriage.position.x, pz = cpos[i * 3 + 2] - carriage.position.z;
+            const floor = Math.abs(px) < bossW / 2 && Math.abs(pz) < bossW / 2 ? TOP : Math.abs(px) < 1.5 && Math.abs(pz) < 0.95 ? BY : -0.2;
+            if (cpos[i * 3 + 1] < floor) {
+              cpos[i * 3 + 1] = floor;
               cvel[i * 3 + 1] *= -0.3;
             }
             const L = 0.035;
@@ -315,6 +424,8 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
           }
           chipGeo.attributes.position.needsUpdate = true;
           streakGeo.attributes.position.needsUpdate = true;
+        } else {
+          glow.material.opacity = 0;
         }
         controls.update();
         renderer.render(scene, camera);
@@ -349,8 +460,8 @@ export default function Hero3D({ t }: { t: Dict["hero"] }) {
         ro.disconnect();
         document.removeEventListener("visibilitychange", onVis);
         scene.traverse((o) => (o as unknown as { geometry?: { dispose(): void } }).geometry?.dispose());
-        [...mats, edge].forEach((m) => m.dispose());
-        glowTex.dispose();
+        [...mats, edge, trailMat].forEach((m) => m.dispose());
+        textures.forEach((x) => x.dispose());
         pmrem.dispose();
         controls.dispose();
         renderer.dispose();
