@@ -29,7 +29,7 @@ export default function Cases({ t, captions }: { t: Dict["cases"]; captions: Dic
           const item = t.items[p.id];
           const slides = p.photos.map((ph) => ({ src: ph.src, caption: ph.caption ? captions[ph.caption] : "" }));
           return (
-            <li key={p.id} className="case-card" data-industry={p.industry}>
+            <li key={p.id} className="case-card spot" data-industry={p.industry}>
               <div className="case-media">
                 {p.photos[0] ? (
                   <RemoteImg src={p.photos[0].src} alt={item.name} style={{ objectPosition: p.photos[0].position }} />

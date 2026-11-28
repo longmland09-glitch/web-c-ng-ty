@@ -9,6 +9,8 @@ import Hero3D from "./Hero3D";
 import Machinery from "./Machinery";
 import RemoteImg from "./RemoteImg";
 import RfqForm from "./RfqForm";
+import Fx from "./fx/Fx";
+import CopyButton from "./fx/CopyButton";
 
 const photo = (id: string, i = 0) => machines.find((m) => m.id === id)!.photos[i].src;
 
@@ -32,7 +34,7 @@ export default function Home({ locale }: { locale: Locale }) {
           <div className="wrap hero-grid">
             <div className="hero-copy">
               <p className="eyebrow">{t.hero.kicker}</p>
-              <h1 id="hero-title">
+              <h1 id="hero-title" data-reveal>
                 <span>{t.hero.title1}</span>
                 <span className="accent">{t.hero.title2}</span>
               </h1>
@@ -52,15 +54,15 @@ export default function Home({ locale }: { locale: Locale }) {
           <div className="wrap">
             <dl className="stats">
               <div>
-                <dd>34</dd>
+                <dd data-count="34">34</dd>
                 <dt>{t.hero.stats.wire}</dt>
               </div>
               <div>
-                <dd>27</dd>
+                <dd data-count="27">27</dd>
                 <dt>{t.hero.stats.mill}</dt>
               </div>
               <div>
-                <dd>Ø0.2 mm</dd>
+                <dd data-count="0.2" data-prefix="Ø" data-suffix=" mm">Ø0.2 mm</dd>
                 <dt>{t.hero.stats.hole}</dt>
               </div>
               <div>
@@ -68,6 +70,19 @@ export default function Home({ locale }: { locale: Locale }) {
                 <dt>{t.hero.stats.since}</dt>
               </div>
             </dl>
+            <div className="marquee" aria-label={t.hero.brands}>
+              <p className="marquee-label">{t.hero.brands}</p>
+              <div className="marquee-track" aria-hidden="true">
+                {[0, 1].map((k) => (
+                  <ul key={k}>
+                    {["Mitsubishi Electric", "Keyence", "Goanwin", "Dowell", "SY-CNC 晏陽", "River 歐群", "e-750", "e-1800"].map((b) => (
+                      <li key={b}>{b}</li>
+                    ))}
+                  </ul>
+                ))}
+              </div>
+              <p className="sr-only">Mitsubishi Electric, Keyence, Goanwin, Dowell, 晏陽, 歐群</p>
+            </div>
           </div>
         </section>
 
@@ -76,13 +91,13 @@ export default function Home({ locale }: { locale: Locale }) {
           <div className="wrap">
             <header className="sec-head">
               <p className="eyebrow">{t.services.label}</p>
-              <h2 id="cap-title">{t.services.title}</h2>
+              <h2 id="cap-title" data-reveal>{t.services.title}</h2>
               <p>{t.services.intro}</p>
             </header>
             <ul className="tiles">
               {tiles.map((tile) => (
                 <li key={tile.id}>
-                  <a href="#machinery" className="tile">
+                  <a href="#machinery" className="tile spot">
                     <RemoteImg src={tile.img} alt="" />
                     <span>{t.machinery.groups[tile.id]}</span>
                   </a>
@@ -103,7 +118,7 @@ export default function Home({ locale }: { locale: Locale }) {
           <div className="wrap rfq-grid">
             <header className="sec-head rfq-head">
               <p className="eyebrow">{t.rfq.label}</p>
-              <h2 id="rfq-title">{t.rfq.title}</h2>
+              <h2 id="rfq-title" data-reveal>{t.rfq.title}</h2>
               <p>{t.rfq.intro}</p>
               <ul className="formats" aria-label={t.rfq.accepted}>
                 {[".STEP", ".IGES", ".DXF", ".DWG", ".PDF"].map((f) => (
@@ -120,7 +135,7 @@ export default function Home({ locale }: { locale: Locale }) {
           <div className="wrap">
             <header className="sec-head">
               <p className="eyebrow">{t.machinery.label}</p>
-              <h2 id="mach-title">{t.machinery.title}</h2>
+              <h2 id="mach-title" data-reveal>{t.machinery.title}</h2>
               <p>{t.machinery.intro}</p>
             </header>
             <Machinery t={t.machinery} cases={t.cases} captions={t.captions} />
@@ -132,7 +147,7 @@ export default function Home({ locale }: { locale: Locale }) {
           <div className="wrap">
             <header className="sec-head">
               <p className="eyebrow">{t.cases.label}</p>
-              <h2 id="cases-title">{t.cases.title}</h2>
+              <h2 id="cases-title" data-reveal>{t.cases.title}</h2>
               <p>{t.cases.intro}</p>
             </header>
             <Cases t={t.cases} captions={t.captions} />
@@ -144,7 +159,7 @@ export default function Home({ locale }: { locale: Locale }) {
           <div className="wrap">
             <header className="sec-head">
               <p className="eyebrow">{t.design.label}</p>
-              <h2 id="d3-title">{t.design.title}</h2>
+              <h2 id="d3-title" data-reveal>{t.design.title}</h2>
               <p>{t.design.intro}</p>
             </header>
             <Design3D t={t.design} />
@@ -156,7 +171,7 @@ export default function Home({ locale }: { locale: Locale }) {
           <div className="wrap about-grid">
             <div>
               <p className="eyebrow">{t.about.label}</p>
-              <h2 id="about-title">{t.about.title}</h2>
+              <h2 id="about-title" data-reveal>{t.about.title}</h2>
               {t.about.body.map((p) => (
                 <p key={p} className="about-p">
                   {p}
@@ -177,7 +192,7 @@ export default function Home({ locale }: { locale: Locale }) {
           </div>
           <div className="wrap">
             <h3 className="sub">{t.about.historyTitle}</h3>
-            <ol className="timeline">
+            <ol className="timeline" data-draw>
               {history.map((y) => (
                 <li key={y}>
                   <span className="year">{y}</span>
@@ -191,10 +206,11 @@ export default function Home({ locale }: { locale: Locale }) {
         {/* ───── Contact ───── */}
         <section id="contact" className="section contact" aria-labelledby="contact-title">
           <RemoteImg className="contact-bg" src={banners.contact} alt="" aria-hidden="true" />
+          <span className="grid-scan" aria-hidden="true" />
           <div className="wrap contact-grid">
             <div>
               <p className="eyebrow">{t.contact.label}</p>
-              <h2 id="contact-title">{t.contact.title}</h2>
+              <h2 id="contact-title" data-reveal>{t.contact.title}</h2>
               <dl className="contact-list">
                 <div>
                   <dt>{t.contact.address}</dt>
@@ -208,6 +224,7 @@ export default function Home({ locale }: { locale: Locale }) {
                   <dt>{t.contact.phone}</dt>
                   <dd>
                     <a href={`tel:${company.phone.replace(/[^+\d]/g, "")}`}>{company.phone}</a>
+                    <CopyButton value={company.phone} label={t.contact.copy} done={t.contact.copied} />
                   </dd>
                 </div>
                 <div>
@@ -218,6 +235,7 @@ export default function Home({ locale }: { locale: Locale }) {
                   <dt>{t.contact.email}</dt>
                   <dd>
                     <a href={`mailto:${company.email}`}>{company.email}</a>
+                    <CopyButton value={company.email} label={t.contact.copy} done={t.contact.copied} />
                   </dd>
                 </div>
                 <div>
@@ -226,7 +244,7 @@ export default function Home({ locale }: { locale: Locale }) {
                 </div>
               </dl>
             </div>
-            <div className="map">
+            <div className="map glow-frame">
               <iframe
                 title={t.contact.map}
                 src={`https://www.google.com/maps?q=${encodeURIComponent(company.mapQuery)}&output=embed`}
@@ -238,6 +256,7 @@ export default function Home({ locale }: { locale: Locale }) {
         </section>
       </main>
       <Footer t={t} />
+      <Fx />
     </>
   );
 }

@@ -222,7 +222,7 @@ export default function RfqForm({ t, locale }: { t: Dict["rfq"]; locale: string 
       </div>
 
       <div className="rfq-submit">
-        <button type="submit" className="btn btn-primary" disabled={status === "sending"}>
+        <button type="submit" className="btn btn-primary" disabled={status === "sending"} data-busy={status === "sending" || undefined}>
           {status === "sending" ? t.sending : t.submit}
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
         </button>

@@ -49,6 +49,7 @@ const en = {
     dragHint: "Drag to rotate",
     loading: "Loading 3D model…",
     stats: { wire: "Wire EDM machines", mill: "CNC milling machines", hole: "Smallest EDM-drilled hole", since: "Founded in Kaohsiung" },
+    brands: "Equipment in our plant",
   },
   about: {
     label: "Company",
@@ -244,6 +245,8 @@ const en = {
     hours: "Hours",
     hoursValue: "Mon–Fri, 08:00–18:00 (GMT+8)",
     map: "Map to Xinmiao International",
+    copy: "Copy",
+    copied: "Copied",
   },
   footer: { rights: "All rights reserved." },
 };
@@ -282,6 +285,7 @@ const zhTW: Dict = {
     dragHint: "拖曳旋轉",
     loading: "3D 模型載入中…",
     stats: { wire: "台線切割機", mill: "台 CNC 銑床", hole: "最小放電細孔", since: "於高雄創立" },
+    brands: "本廠設備品牌",
   },
   about: {
     label: "公司簡介",
@@ -476,6 +480,8 @@ const zhTW: Dict = {
     hours: "營業時間",
     hoursValue: "週一至週五 08:00–18:00",
     map: "芯淼國際位置地圖",
+    copy: "複製",
+    copied: "已複製",
   },
   footer: { rights: "版權所有。" },
 };
@@ -512,6 +518,7 @@ const ja: Dict = {
     dragHint: "ドラッグで回転",
     loading: "3Dモデルを読み込み中…",
     stats: { wire: "ワイヤー放電加工機", mill: "CNCフライス盤", hole: "細穴放電の最小径", since: "高雄にて創業" },
+    brands: "当社設備のメーカー",
   },
   about: {
     label: "会社概要",
@@ -706,6 +713,8 @@ const ja: Dict = {
     hours: "営業時間",
     hoursValue: "月〜金 08:00–18:00（台湾時間）",
     map: "芯淼國際の地図",
+    copy: "コピー",
+    copied: "コピーしました",
   },
   footer: { rights: "All rights reserved." },
 };
@@ -742,6 +751,7 @@ const vi: Dict = {
     dragHint: "Kéo để xoay",
     loading: "Đang tải mô hình 3D…",
     stats: { wire: "máy cắt dây EDM", mill: "máy phay CNC", hole: "Lỗ xung điện nhỏ nhất", since: "Thành lập tại Cao Hùng" },
+    brands: "Thiết bị tại xưởng",
   },
   about: {
     label: "Công ty",
@@ -937,6 +947,8 @@ const vi: Dict = {
     hours: "Giờ làm việc",
     hoursValue: "Thứ Hai–Thứ Sáu, 08:00–18:00 (GMT+8)",
     map: "Bản đồ tới Xinmiao International",
+    copy: "Chép",
+    copied: "Đã chép",
   },
   footer: { rights: "Bảo lưu mọi quyền." },
 };

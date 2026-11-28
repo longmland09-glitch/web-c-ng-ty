@@ -12,7 +12,7 @@ export default function Machinery({ t, cases, captions }: { t: Dict["machinery"]
           const slides = m.photos.map((ph) => ({ src: ph.src, caption: ph.caption ? captions[ph.caption] : t.groups[m.id] }));
           return (
             <li key={m.id} className="show-card">
-              <Gallery title={t.groups[m.id]} slides={slides} labels={cases} className="show-open">
+              <Gallery title={t.groups[m.id]} slides={slides} labels={cases} className="show-open spot">
                 <MachineStage src={m.cutout ?? m.photos[0].src} cutout={!!m.cutout} alt={t.groups[m.id]} />
                 <span className="show-meta">
                   <span className="show-name">{t.groups[m.id]}</span>
